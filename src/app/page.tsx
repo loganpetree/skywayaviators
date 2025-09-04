@@ -110,7 +110,7 @@ export default function Home() {
                   Accelerated Flight Training
                 </h1>
                 <p className="text-xl md:text-2xl text-gray-600 max-w-xl leading-relaxed">
-                  Transform your dreams into reality with Lancaster's premier flight training. Join hundreds of successful pilots who started their aviation careers with us.
+                  Transform your dreams into reality with Lancaster&apos;s premier flight training. Join hundreds of successful pilots who started their aviation careers with us.
                 </p>
               </div>
 

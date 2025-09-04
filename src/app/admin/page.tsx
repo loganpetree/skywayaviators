@@ -1,5 +1,6 @@
 import { LoginModal } from "@/components/LoginModal";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function AdminPage() {
   return (
@@ -47,12 +48,12 @@ export default function AdminPage() {
         </div>
 
         <div className="text-center">
-          <a
+          <Link
             href="/"
             className="text-blue-600 hover:text-blue-500 text-sm"
           >
             ← Back to main site
-          </a>
+          </Link>
         </div>
       </div>
     </div>
