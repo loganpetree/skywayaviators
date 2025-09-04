@@ -32,6 +32,7 @@ export function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps) 
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   // Load saved form data on mount
   React.useEffect(() => {
@@ -40,7 +41,7 @@ export function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps) 
       try {
         const parsed = JSON.parse(saved);
         setFormData(prev => ({ ...prev, ...parsed }));
-      } catch (e) {
+      } catch {
         console.log('Failed to load saved form data');
       }
     }
