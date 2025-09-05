@@ -5,8 +5,81 @@ import { useEffect } from "react";
 import { incrementPageLoadCount } from "@/lib/firebase";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { Button } from "@/components/ui/button";
+import { Carousel } from "@/components/ui/apple-cards-carousel";
 
 export default function Home() {
+  // Program cards data for carousel
+  const programCards = [
+    <div key="private-pilot" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+      <div className="relative z-40 p-8">
+        <p className="text-left font-sans text-sm font-medium text-white md:text-base">
+          Starting at $15,000
+        </p>
+        <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
+          Private Pilot
+        </h3>
+      </div>
+      <Image
+        src="/private-pilot-card.png"
+        alt="Private Pilot Certificate"
+        fill
+        className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
+      />
+    </div>,
+    <div key="instrument-pilot" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+      <div className="relative z-40 p-8">
+        <p className="text-left font-sans text-sm font-medium text-white md:text-base">
+          Starting at $8,000
+        </p>
+        <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
+          Instrument Pilot
+        </h3>
+      </div>
+      <Image
+        src="/ifr.png"
+        alt="Instrument Pilot Training"
+        fill
+        className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
+      />
+    </div>,
+    <div key="commercial-pilot" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+      <div className="relative z-40 p-8">
+        <p className="text-left font-sans text-sm font-medium text-white md:text-base">
+          Starting at $35,000
+        </p>
+        <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
+          Commercial Pilot
+        </h3>
+      </div>
+      <Image
+        src="/commercial-card.png"
+        alt="Commercial Pilot Training"
+        fill
+        className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
+      />
+    </div>,
+    <div key="placeholder-program" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+      <div className="relative z-40 p-8">
+        <p className="text-left font-sans text-sm font-medium text-white md:text-base">
+          Starting at $5,000
+        </p>
+        <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
+          Advanced Rating
+        </h3>
+      </div>
+      <Image
+        src="/plane.png"
+        alt="Advanced Rating Training"
+        fill
+        className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
+      />
+    </div>
+  ];
+
   const testimonials = [
     {
       quote: "I built around 500 hours as a time builder with Skyway Aviators, and as a First Officer at Republic Airways, I can confidently say I couldn't have achieved that without them. The aircraft availability was consistent, and the maintenance control was top-notch.",
@@ -85,7 +158,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 relative overflow-hidden bg-gradient-to-b from-white to-gray-50" style={{
+      <section className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-b from-white to-gray-50" style={{
         backgroundImage: `url('/clouds.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -94,7 +167,7 @@ export default function Home() {
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-white/60"></div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Content */}
             <div className="space-y-8 text-center lg:text-left">
@@ -164,7 +237,7 @@ export default function Home() {
       </section>
 
       {/* Fleet Section */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-12">
             <div className="flex-1">
@@ -263,94 +336,76 @@ export default function Home() {
       </section>
 
       {/* Programs Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-12">
-            <div className="flex-1">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Our Programs
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl">
-                Comprehensive flight training programs designed to take you from student pilot to professional aviator
-              </p>
-            </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white ml-8 flex-shrink-0">
-              View All Programs
-            </Button>
+      <section
+        className="py-16 bg-white relative overflow-hidden"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px),
+            radial-gradient(circle, rgba(139, 92, 246, 0.08) 1px, transparent 1px),
+            radial-gradient(circle, rgba(76, 71, 236, 0.06) 1px, transparent 1px)
+          `,
+          backgroundSize: '20px 20px, 30px 30px, 40px 40px',
+          backgroundPosition: '0 0, 10px 10px, 20px 20px'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Our Programs
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We take you from zero flight experience to ATP certification and everywhere in between
+            </p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Program 1 - Private Pilot */}
-            <div className="bg-gray-50 rounded-lg shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Private Pilot</h3>
-                <p className="text-gray-600 mb-4">
-                  Start your aviation journey with our comprehensive private pilot certificate program.
-                </p>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">40-60 hours</span>
-                  <span className="text-sm text-gray-500">Starting at $15,000</span>
-                </div>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Learn More
-                </Button>
-              </div>
-            </div>
+        {/* Carousel outside container for full-width scrolling */}
+        <div className="pl-4 sm:pl-6 lg:pl-8">
+          <Carousel items={programCards} />
+        </div>
 
-            {/* Program 2 - Commercial Pilot */}
-            <div className="bg-gray-50 rounded-lg shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Commercial Pilot</h3>
-                <p className="text-gray-600 mb-4">
-                  Advance your career with professional commercial pilot certification and training.
-                </p>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">150+ hours</span>
-                  <span className="text-sm text-gray-500">Starting at $35,000</span>
-                </div>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Learn More
-                </Button>
-              </div>
-            </div>
+        {/* Financing Modal */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div
+            className="relative rounded-3xl p-10 md:p-12 text-center text-white shadow-2xl overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(76, 71, 236, 0.95) 0%, rgba(99, 102, 241, 0.95) 50%, rgba(139, 92, 246, 0.95) 100%)'
+            }}
+          >
+            {/* Background decorative elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-xl -translate-y-8 translate-x-8"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-lg translate-y-6 -translate-x-6"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
 
-            {/* Program 3 - Flight Instructor */}
-            <div className="bg-gray-50 rounded-lg shadow-lg overflow-hidden">
-              <div className="h-48 overflow-hidden">
-                <Image
-                  src="/ifr.png"
-                  alt="IFR Training"
-                  width={400}
-                  height={192}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">CFI Training</h3>
-                <p className="text-gray-600 mb-4">
-                  Become a certified flight instructor and share your passion for aviation.
-                </p>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">25+ hours</span>
-                  <span className="text-sm text-gray-500">Starting at $8,000</span>
+            <div className="relative z-10">
+
+              <h3 className="text-3xl md:text-4xl font-black mb-6 tracking-tight">
+                Easy Financing Available
+              </h3>
+
+              <p className="text-lg md:text-xl mb-8 max-w-4xl mx-auto leading-relaxed opacity-90">
+                Take the first step towards your aviation career with flexible financing options through
+                <span className="font-semibold text-white"> Wurthy</span>.
+                Start your training today with affordable monthly payments tailored to your needs.
+              </p>
+
+              <Button className="bg-white text-indigo-600 hover:bg-gray-50 font-bold px-10 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                Learn About Financing
+              </Button>
+
+              <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm opacity-75">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span>No Credit Check Required</span>
                 </div>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Learn More
-                </Button>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span>Flexible Terms</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                  <span>Quick Approval</span>
+                </div>
               </div>
             </div>
           </div>
@@ -358,7 +413,7 @@ export default function Home() {
       </section>
 
       {/* Time Building Packages Section */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-12">
             <div className="flex-1">
@@ -503,7 +558,7 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-slate-100 relative overflow-hidden">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 via-white to-slate-100 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
@@ -511,7 +566,7 @@ export default function Home() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-green-500 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-6">
               <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
@@ -538,7 +593,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Contact Information */}
             <div className="space-y-4">
