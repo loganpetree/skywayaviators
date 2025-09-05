@@ -236,6 +236,83 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Programs Section */}
+      <section
+        className="py-16 bg-white relative overflow-hidden"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px),
+            radial-gradient(circle, rgba(139, 92, 246, 0.08) 1px, transparent 1px),
+            radial-gradient(circle, rgba(76, 71, 236, 0.06) 1px, transparent 1px)
+          `,
+          backgroundSize: '20px 20px, 30px 30px, 40px 40px',
+          backgroundPosition: '0 0, 10px 10px, 20px 20px'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Our Programs
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We take you from zero flight experience to ATP certification and everywhere in between
+            </p>
+          </div>
+        </div>
+
+        {/* Carousel outside container for full-width scrolling */}
+        <div className="pl-4 sm:pl-6 lg:pl-8">
+          <Carousel items={programCards} />
+        </div>
+
+        {/* Financing Modal */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div
+            className="relative rounded-3xl p-10 md:p-12 text-center text-white shadow-2xl overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(76, 71, 236, 0.95) 0%, rgba(99, 102, 241, 0.95) 50%, rgba(139, 92, 246, 0.95) 100%)'
+            }}
+          >
+            {/* Background decorative elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-xl -translate-y-8 translate-x-8"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-lg translate-y-6 -translate-x-6"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+
+            <div className="relative z-10">
+
+              <h3 className="text-3xl md:text-4xl font-black mb-6 tracking-tight">
+                Easy Financing Available
+              </h3>
+
+              <p className="text-lg md:text-xl mb-8 max-w-4xl mx-auto leading-relaxed opacity-90">
+                Take the first step towards your aviation career with flexible financing options through
+                <span className="font-semibold text-white"> Wurthy</span>.
+                Start your training today with affordable monthly payments tailored to your needs.
+              </p>
+
+              <Button className="bg-white text-indigo-600 hover:bg-gray-50 font-bold px-10 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                Learn About Financing
+              </Button>
+
+              <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm opacity-75">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span>No Credit Check Required</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span>Flexible Terms</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                  <span>Quick Approval</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Fleet Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
@@ -329,83 +406,6 @@ export default function Home() {
                 <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                   Book Now
                 </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Programs Section */}
-      <section
-        className="py-16 bg-white relative overflow-hidden"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px),
-            radial-gradient(circle, rgba(139, 92, 246, 0.08) 1px, transparent 1px),
-            radial-gradient(circle, rgba(76, 71, 236, 0.06) 1px, transparent 1px)
-          `,
-          backgroundSize: '20px 20px, 30px 30px, 40px 40px',
-          backgroundPosition: '0 0, 10px 10px, 20px 20px'
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Our Programs
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              We take you from zero flight experience to ATP certification and everywhere in between
-            </p>
-          </div>
-        </div>
-
-        {/* Carousel outside container for full-width scrolling */}
-        <div className="pl-4 sm:pl-6 lg:pl-8">
-          <Carousel items={programCards} />
-        </div>
-
-        {/* Financing Modal */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-          <div
-            className="relative rounded-3xl p-10 md:p-12 text-center text-white shadow-2xl overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, rgba(76, 71, 236, 0.95) 0%, rgba(99, 102, 241, 0.95) 50%, rgba(139, 92, 246, 0.95) 100%)'
-            }}
-          >
-            {/* Background decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-xl -translate-y-8 translate-x-8"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-lg translate-y-6 -translate-x-6"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
-
-            <div className="relative z-10">
-
-              <h3 className="text-3xl md:text-4xl font-black mb-6 tracking-tight">
-                Easy Financing Available
-              </h3>
-
-              <p className="text-lg md:text-xl mb-8 max-w-4xl mx-auto leading-relaxed opacity-90">
-                Take the first step towards your aviation career with flexible financing options through
-                <span className="font-semibold text-white"> Wurthy</span>.
-                Start your training today with affordable monthly payments tailored to your needs.
-              </p>
-
-              <Button className="bg-white text-indigo-600 hover:bg-gray-50 font-bold px-10 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                Learn About Financing
-              </Button>
-
-              <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm opacity-75">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span>No Credit Check Required</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  <span>Flexible Terms</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                  <span>Quick Approval</span>
-                </div>
               </div>
             </div>
           </div>
