@@ -97,6 +97,7 @@ export default function DashboardPage() {
       });
       setImagePreviews([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dialogOpen]);
 
   const handleLogout = async () => {
@@ -108,7 +109,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleAircraftFormChange = (field: string, value: any) => {
+  const handleAircraftFormChange = (field: keyof typeof aircraftForm, value: string | number | File[] | string[] | undefined) => {
     setAircraftForm(prev => ({
       ...prev,
       [field]: value
@@ -329,7 +330,7 @@ export default function DashboardPage() {
       }
 
       // Prepare aircraft data
-      const aircraftData: any = {
+      const aircraftData: Partial<Aircraft> = {
         tailNumber: aircraftForm.tailNumber,
         type: aircraftForm.type,
         model: aircraftForm.model,

@@ -34,7 +34,6 @@ const {
   Sankey,
   SunburstChart,
   Treemap,
-  TreeMap,
   ...rechartsComponents
 } = RechartsPrimitive
 
@@ -69,7 +68,6 @@ export {
   Sankey,
   SunburstChart,
   Treemap,
-  TreeMap,
   RechartsCell,
 }
 
@@ -139,7 +137,10 @@ const ChartTooltipContent = React.forwardRef<
     }
 >(
   (
-    {
+    props,
+    ref
+  ) => {
+    const {
       active,
       payload,
       label,
@@ -149,9 +150,8 @@ const ChartTooltipContent = React.forwardRef<
       className,
       nameKey,
       labelKey,
-    },
-    ref
-  ) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } = props as any;
     const { config } = useChart()
 
     const tooltipLabel = React.useMemo(() => {
@@ -194,7 +194,8 @@ const ChartTooltipContent = React.forwardRef<
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
-          {payload.map((item, index) => {
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {payload.map((item: any, index: number) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`
             const itemConfig = getPayloadConfigFromPayload(config, item, key)
             const indicatorColor = item.payload?.fill || item.color
@@ -259,11 +260,13 @@ const ChartLegend = RechartsPrimitive.Legend
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
-      hideIcon?: boolean
-      nameKey?: string
-    }
+  React.ComponentProps<"div"> & {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    payload?: any
+    verticalAlign?: string
+    hideIcon?: boolean
+    nameKey?: string
+  }
 >(
   (
     { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey },
@@ -282,7 +285,8 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map((item) => {
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {payload.map((item: any) => {
           const key = `${nameKey || item.dataKey || item.value || item.id}`
 
           return (

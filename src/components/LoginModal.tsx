@@ -39,7 +39,7 @@ export function LoginModal({ children }: LoginModalProps) {
       setEmail("");
       setPassword("");
       router.push("/admin/dashboard");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Login error:", error);
       setError("Invalid email or password. Please try again.");
     } finally {
