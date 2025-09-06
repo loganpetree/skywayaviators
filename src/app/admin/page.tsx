@@ -1,8 +1,25 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { LoginModal } from "@/components/LoginModal";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function AdminPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.push("/admin/dashboard");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8 p-8">

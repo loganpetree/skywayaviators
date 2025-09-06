@@ -18,6 +18,17 @@ export const AnimatedTestimonials = ({
   testimonials: Testimonial[];
 }) => {
   const [active, setActive] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Generate random rotation values once for each testimonial to prevent hydration mismatches
+  const [randomRotations] = useState(() =>
+    testimonials.map(() => Math.floor(Math.random() * 21) - 10)
+  );
+
+  // Mark as mounted to ensure we only render animations after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleNext = () => {
     setActive((prev) => (prev + 1) % testimonials.length);
@@ -31,58 +42,71 @@ export const AnimatedTestimonials = ({
     return index === active;
   };
 
-
-  const randomRotateY = () => {
-    return Math.floor(Math.random() * 21) - 10;
+  const getRandomRotateY = (index: number) => {
+    return randomRotations[index] || 0;
   };
   return (
     <div className="w-full font-sans antialiased">
       <div className="relative grid grid-cols-1 gap-12 md:grid-cols-2">
         <div>
           <div className="relative h-64 w-full">
-            <AnimatePresence>
-              {testimonials.map((testimonial, index) => (
-                <motion.div
-                  key={`${testimonial.name}-${index}`}
-                  initial={{
-                    opacity: 0,
-                    scale: 0.9,
-                    z: -100,
-                    rotate: randomRotateY(),
-                  }}
-                  animate={{
-                    opacity: isActive(index) ? 1 : 0.7,
-                    scale: isActive(index) ? 1 : 0.95,
-                    z: isActive(index) ? 0 : -100,
-                    rotate: isActive(index) ? 0 : randomRotateY(),
-                    zIndex: isActive(index)
-                      ? 40
-                      : testimonials.length + 2 - index,
-                    y: isActive(index) ? [0, -80, 0] : 0,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: 0.9,
-                    z: 100,
-                    rotate: randomRotateY(),
-                  }}
-                  transition={{
-                    duration: 0.4,
-                    ease: "easeInOut",
-                  }}
-                  className="absolute inset-0 origin-bottom"
-                >
-                  <img
-                    src={testimonial.src}
-                    alt={testimonial.name}
-                    width={500}
-                    height={500}
-                    draggable={false}
-                    className="h-full w-full rounded-3xl object-cover object-center"
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            {mounted ? (
+              <AnimatePresence>
+                {testimonials.map((testimonial, index) => (
+                  <motion.div
+                    key={`${testimonial.name}-${index}`}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.9,
+                      z: -100,
+                      rotate: getRandomRotateY(index),
+                    }}
+                    animate={{
+                      opacity: isActive(index) ? 1 : 0.7,
+                      scale: isActive(index) ? 1 : 0.95,
+                      z: isActive(index) ? 0 : -100,
+                      rotate: isActive(index) ? 0 : getRandomRotateY(index),
+                      zIndex: isActive(index)
+                        ? 40
+                        : testimonials.length + 2 - index,
+                      y: isActive(index) ? [0, -80, 0] : 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.9,
+                      z: 100,
+                      rotate: getRandomRotateY(index),
+                    }}
+                    transition={{
+                      duration: 0.4,
+                      ease: "easeInOut",
+                    }}
+                    className="absolute inset-0 origin-bottom"
+                  >
+                    <img
+                      src={testimonial.src}
+                      alt={testimonial.name}
+                      width={500}
+                      height={500}
+                      draggable={false}
+                      className="h-full w-full rounded-3xl object-cover object-center"
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            ) : (
+              // Static fallback during SSR
+              <div className="absolute inset-0">
+                <img
+                  src={testimonials[0]?.src}
+                  alt={testimonials[0]?.name}
+                  width={500}
+                  height={500}
+                  draggable={false}
+                  className="h-full w-full rounded-3xl object-cover object-center"
+                />
+              </div>
+            )}
           </div>
         </div>
         <div className="flex flex-col justify-between py-4 min-h-[400px]">
@@ -126,7 +150,7 @@ export const AnimatedTestimonials = ({
                   overflow: 'hidden'
                 }}
               >
-              {testimonials[active].quote.split(" ").map((word, index) => (
+              {mounted ? testimonials[active].quote.split(" ").map((word, index) => (
                 <motion.span
                   key={index}
                   initial={{
@@ -148,7 +172,9 @@ export const AnimatedTestimonials = ({
                 >
                   {word}&nbsp;
                 </motion.span>
-              ))}
+              )) : (
+                testimonials[active].quote
+              )}
               </motion.p>
             </motion.div>
           </motion.div>

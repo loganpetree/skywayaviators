@@ -1,13 +1,44 @@
 'use client';
 
 import Image from "next/image";
-import { useEffect } from "react";
-import { incrementPageLoadCount } from "@/lib/firebase";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { incrementPageLoadCount, db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { Button } from "@/components/ui/button";
 import { Carousel } from "@/components/ui/apple-cards-carousel";
+import { AircraftImageCarousel } from "@/components/AircraftImageCarousel";
+import { Aircraft } from "@/types/aircraft";
 
 export default function Home() {
+  const router = useRouter();
+  const [aircraft, setAircraft] = useState<Aircraft[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch aircraft data from Firebase
+  useEffect(() => {
+    const fetchAircraft = async () => {
+      try {
+        const aircraftCollection = collection(db, 'aircraft');
+        const q = query(aircraftCollection, where('isHidden', '==', false));
+        const aircraftSnapshot = await getDocs(q);
+        const aircraftList = aircraftSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Aircraft[];
+
+        setAircraft(aircraftList);
+      } catch (error) {
+        console.error('Error fetching aircraft:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAircraft();
+  }, []);
+
   // Program cards data for carousel
   const programCards = [
     <div key="private-pilot" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
@@ -134,7 +165,7 @@ export default function Home() {
 
             {/* Navigation Tabs */}
             <nav className="hidden md:flex space-x-8">
-              <a href="#" className="text-gray-900  px-3 py-2 text-sm font-bold">
+              <a href="#fleet" className="text-gray-900  px-3 py-2 text-sm font-bold">
                 Fleet
               </a>
               <a href="#" className="text-gray-900  px-3 py-2 text-sm font-bold">
@@ -314,7 +345,7 @@ export default function Home() {
       </section>
 
       {/* Fleet Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section id="fleet" className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-12">
             <div className="flex-1">
@@ -330,85 +361,59 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Aircraft 1 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden relative">
-              <div className="h-48 overflow-hidden">
-                <img
-                  src="/N7774A/N7774A-Main.jpeg"
-                  alt="N7774A Aircraft"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-3 right-3 bg-green-500 text-gray-900 text-xs font-semibold px-2 py-1 rounded-full">
-                  IFR Equipped
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Loading placeholders */}
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
+                  <div className="h-64 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-10 bg-gray-200 rounded"></div>
+                  </div>
                 </div>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold text-gray-900">CESSNA 172F</h3>
-                  <span className="text-sm text-gray-500 font-medium">N7774A</span>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Perfect for short to medium-range flights with exceptional comfort and speed.
-                </p>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">Up to 4 passengers</span>
-                  <span className="text-sm text-gray-500">$170/hr</span>
-                </div>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Book Now
-                </Button>
-              </div>
+              ))}
             </div>
-
-            {/* Aircraft 2 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden ">
-              <div className="h-48 overflow-hidden ">
-                <img
-                  src="/N2500Q/N2500Q.jpeg"
-                  alt="N2500Q Aircraft"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">N2500Q</h3>
-                <p className="text-gray-600 mb-4">
-                  Perfect for short trips and personal travel with exceptional efficiency.
-                </p>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">Up to 2 passengers</span>
-                  <span className="text-sm text-gray-500">$90/hr</span>
-                </div>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Book Now
-                </Button>
-              </div>
+          ) : aircraft.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg">No aircraft available at the moment.</p>
             </div>
-
-            {/* Aircraft 3 */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden ">
-              <div className="h-48 overflow-hidden ">
-                <img
-                  src="/N8294S.jpeg"
-                  alt="N8294S Aircraft"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">N8294S</h3>
-                <p className="text-gray-600 mb-4">
-                  Reliable and efficient aircraft perfect for personal and business travel.
-                </p>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">Up to 2 passengers</span>
-                  <span className="text-sm text-gray-500">$90/hr</span>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {aircraft.map((plane) => (
+                <div
+                  key={plane.id}
+                  className="bg-white rounded-lg shadow-lg overflow-hidden relative cursor-pointer hover:shadow-xl transition-shadow duration-300"
+                  onClick={() => router.push(`/aircraft/${plane.tailNumber}`)}
+                >
+                  <AircraftImageCarousel
+                    images={plane.images.map(img => img.large)}
+                    alt={`${plane.type} ${plane.model} ${plane.tailNumber} Aircraft`}
+                  />
+                  {plane.equipment && plane.equipment.includes('IFR') && (
+                    <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full z-20">
+                      IFR Equipped
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-xl font-bold text-gray-900">{plane.type} {plane.model}</h3>
+                      <span className="text-sm text-gray-500 font-medium">{plane.tailNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm text-gray-500">Up to {plane.capacity} occupants</span>
+                      <span className="text-sm text-gray-500">${plane.hourlyRate}/hr</span>
+                    </div>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                      Book Now
+                    </Button>
+                  </div>
                 </div>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Book Now
-                </Button>
-              </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </section>
 

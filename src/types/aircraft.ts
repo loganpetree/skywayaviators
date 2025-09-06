@@ -6,7 +6,12 @@ export interface Aircraft {
   description: string;
   capacity: number;
   hourlyRate: number;
-  images: string[];
+  images: {
+    original: string;
+    large: string;
+    medium: string;
+    small: string;
+  }[];
   equipment?: string[];
   features?: string[];
   isHidden: boolean;

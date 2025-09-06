@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import {
   Dialog,
   DialogContent,
@@ -21,20 +24,36 @@ export function LoginModal({ children }: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual login logic
-    console.log("Login attempt:", { email, password });
+    setError("");
+    setIsLoading(true);
 
-    // For now, just close the modal
-    setIsOpen(false);
-    setEmail("");
-    setPassword("");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setIsOpen(false);
+      setEmail("");
+      setPassword("");
+      router.push("/admin/dashboard");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setError("Invalid email or password. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (open) {
+        setError("");
+      }
+    }}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -46,6 +65,11 @@ export function LoginModal({ children }: LoginModalProps) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleLogin} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -55,6 +79,7 @@ export function LoginModal({ children }: LoginModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -66,6 +91,7 @@ export function LoginModal({ children }: LoginModalProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
           <div className="flex justify-end space-x-2 pt-4">
@@ -73,11 +99,12 @@ export function LoginModal({ children }: LoginModalProps) {
               type="button"
               variant="outline"
               onClick={() => setIsOpen(false)}
+              disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button type="submit">
-              Login
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
           </div>
         </form>
