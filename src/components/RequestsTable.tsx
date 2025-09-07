@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { TrendingUp, Calendar, User, Mail } from "lucide-react"
+import { User, Mail } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -10,28 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Request } from "@/types/request"
 
 interface RequestsTableProps {
   requests: Request[];
-  onUpdateStatus: (requestId: string, isResponded: boolean) => void;
+  onUpdateStatus: (requestId: string | undefined, isResponded: boolean) => void;
 }
 
 export function RequestsTable({ requests, onUpdateStatus }: RequestsTableProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'responded':
-        return "bg-green-100 text-green-800"
-      case 'cancelled':
-        return "bg-red-100 text-red-800"
-      case 'pending':
-      default:
-        return "bg-yellow-100 text-yellow-800"
-    }
-  }
 
   const getInterestTypeLabel = (interestType: string) => {
     switch (interestType) {
@@ -56,7 +44,7 @@ export function RequestsTable({ requests, onUpdateStatus }: RequestsTableProps) 
             <span>Flight Requests</span>
           </h3>
           <div className="text-sm text-muted-foreground">
-            Today's flight requests - mark as responded when contacted
+            Today&apos;s flight requests - mark as responded when contacted
           </div>
         </div>
 
@@ -160,7 +148,9 @@ export function RequestsTable({ requests, onUpdateStatus }: RequestsTableProps) 
                         value={request.status === 'responded' ? 'responded' : 'pending'}
                         onValueChange={(value) => {
                           const isResponded = value === 'responded';
-                          onUpdateStatus(request.id, isResponded);
+                          if (request.id) {
+                            onUpdateStatus(request.id, isResponded);
+                          }
                         }}
                         className="flex justify-center space-x-4"
                       >

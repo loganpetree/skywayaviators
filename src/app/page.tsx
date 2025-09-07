@@ -1,7 +1,7 @@
 'use client';
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { incrementPageLoadCount } from "@/lib/firebase";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
@@ -357,7 +357,7 @@ export default function Home() {
                   onClick={() => router.push(`/aircraft/${plane.tailNumber}`)}
                 >
                   <AircraftImageCarousel
-                    images={plane.images?.map((img: any) => img.large) || []}
+                    images={plane.images?.map((img) => img.large) || []}
                     alt={`${plane.type} ${plane.model} ${plane.tailNumber} Aircraft`}
                     loading={loading}
                   />

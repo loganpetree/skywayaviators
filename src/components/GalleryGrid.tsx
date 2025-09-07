@@ -14,13 +14,23 @@ interface GalleryGridProps {
   instructor: string;
   handleShowAllPhotos: () => void;
   loading?: boolean;
-  aircraftImages?: any[]; // Full aircraft images with all sizes
+  aircraftImages?: {
+    original: string;
+    large: string;
+    medium: string;
+    small: string;
+  }[]; // Full aircraft images with all sizes
 }
 
 // Complete Gallery Implementation (Mobile + Desktop)
 const GalleryGrid = ({ galleryImages, instructor, handleShowAllPhotos, loading = false, aircraftImages = [] }: GalleryGridProps) => {
   const [fullScreenImage, setFullScreenImage] = useState<{
-    images: any[];
+    images: {
+      original: string;
+      large: string;
+      medium: string;
+      small: string;
+    }[];
     currentIndex: number;
   } | null>(null);
 
@@ -332,7 +342,7 @@ const GalleryGrid = ({ galleryImages, instructor, handleShowAllPhotos, loading =
               <div className="flex justify-center px-2 py-2 sm:px-4 sm:py-2">
                 <div className="bg-black/60 rounded-lg px-3 py-3 sm:px-4 sm:py-4 max-w-5xl">
                   <div className="flex gap-2 sm:gap-3 overflow-x-auto justify-center">
-                    {fullScreenImage.images.map((image: any, index: number) => (
+                    {fullScreenImage.images.map((image, index: number) => (
                       <button
                         key={index}
                         className={`flex-shrink-0 w-16 h-12 sm:w-20 sm:h-16 rounded-md border-2 transition-all overflow-hidden ${

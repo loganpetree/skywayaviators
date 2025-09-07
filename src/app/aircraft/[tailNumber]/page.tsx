@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { AlertCircle, MapPin, Share, DollarSign, Users, Plane, Gauge, Shield, Check, Award, CheckCircle, Camera } from "lucide-react"
+import { AlertCircle, MapPin, Share, DollarSign, Users, Plane, Shield, Check, Award, CheckCircle, Camera } from "lucide-react"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -14,29 +14,6 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { collection, addDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-
-// Type definitions for local aircraft data (fallback)
-interface AircraftData {
-  name: string;
-  tailNumber: string;
-  images: string[];
-  description: string;
-  specifications: {
-    passengers: string;
-    range: string;
-    speed: string;
-    engine: string;
-    features: string[];
-  };
-  pricing: {
-    hourly: string;
-    blockHours: string;
-  };
-  location: string;
-  totalFlightHours: number;
-  yearsOfService: number;
-  certifications: string[];
-}
 
 export default function AircraftDetailPage() {
   const params = useParams()
@@ -59,7 +36,6 @@ export default function AircraftDetailPage() {
   const {
     aircraft: storeAircraft,
     loading: storeLoading,
-    error: storeError,
     fetchAircraft,
     getAircraftByTailNumber,
     fetched
@@ -275,7 +251,7 @@ export default function AircraftDetailPage() {
             {!showAllPhotos ? (
               <GalleryGrid
                 galleryImages={aircraft.images && aircraft.images.length > 0
-                  ? aircraft.images.map((imageObj: any, index: number) => ({
+                  ? aircraft.images.map((imageObj, index: number) => ({
                       src: imageObj.large || imageObj.medium || imageObj.original || imageObj.small,
                       alt: `${aircraft.type} ${aircraft.model} ${aircraft.tailNumber} - Photo ${index + 1}`,
                       isPlaceholder: false
@@ -311,7 +287,7 @@ export default function AircraftDetailPage() {
                       </div>
                     ))
                   ) : (
-                    aircraft.images && aircraft.images.map((imageObj: any, index: number) => (
+                    aircraft.images && aircraft.images.map((imageObj, index: number) => (
                       <div key={index} className="aspect-square relative overflow-hidden rounded-lg">
                         <img
                           src={imageObj.large || imageObj.original || imageObj.medium || imageObj.small}

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { collection, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import { TrafficChart } from "@/components/TrafficChart";
@@ -333,7 +333,7 @@ export default function DashboardPage() {
                 isResponded,
                 status: isResponded ? 'responded' : 'pending',
                 respondedAt: isResponded ? now : undefined,
-                respondedBy: user?.email
+                respondedBy: user?.email || undefined
               }
             : req
         )
@@ -347,7 +347,7 @@ export default function DashboardPage() {
                 isResponded,
                 status: isResponded ? 'responded' : 'pending',
                 respondedAt: isResponded ? now : undefined,
-                respondedBy: user?.email
+                respondedBy: user?.email || undefined
               }
             : req
         )
