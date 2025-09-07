@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { collection, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import { TrafficChart } from "@/components/TrafficChart";
+import { RequestsTable } from "@/components/RequestsTable";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Aircraft } from "@/types/aircraft";
+import { Request } from "@/types/request";
 
 type TabType = "overview" | "aircraft" | "packages" | "requests" | "testimonials" | "flight-hours";
 
@@ -45,6 +47,10 @@ export default function DashboardPage() {
   const [aircraftList, setAircraftList] = useState<Aircraft[]>([]);
   const [loadingAircraft, setLoadingAircraft] = useState(true);
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
+  const [todayRequests, setTodayRequests] = useState<Request[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [allRequests, setAllRequests] = useState<Request[]>([]);
+  const [loadingAllRequests, setLoadingAllRequests] = useState(false);
   const [existingImages, setExistingImages] = useState<{ original: string; large: string; medium: string; small: string }[]>([]);
   const [aircraftForm, setAircraftForm] = useState<{
     tailNumber: string;
@@ -78,6 +84,8 @@ export default function DashboardPage() {
       if (user) {
         setUser(user);
         fetchAircraft(); // Fetch aircraft when user is authenticated
+        fetchTodayRequests(); // Fetch today's requests when user is authenticated
+        fetchAllRequests(); // Fetch all requests when user is authenticated
       } else {
         router.push("/admin");
       }
@@ -233,6 +241,120 @@ export default function DashboardPage() {
       console.error("Error fetching aircraft:", error);
     } finally {
       setLoadingAircraft(false);
+    }
+  };
+
+  const fetchTodayRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+      // Get all requests and filter by date in JavaScript
+      // This is simpler than dealing with Firestore date queries
+      const q = query(
+        collection(db, "requests"),
+        orderBy("dateSubmitted", "desc")
+      );
+
+      const querySnapshot = await getDocs(q);
+      const allRequests: Request[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        allRequests.push({
+          id: doc.id,
+          ...data,
+          dateSubmitted: data.dateSubmitted || new Date().toISOString(),
+        } as Request);
+      });
+
+      // Filter for today's requests
+      const todayRequests = allRequests.filter(request => {
+        const requestDate = new Date(request.dateSubmitted);
+        return requestDate >= startOfDay && requestDate < endOfDay;
+      });
+
+      setTodayRequests(todayRequests);
+    } catch (error) {
+      console.error("Error fetching today's requests:", error);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  const fetchAllRequests = async () => {
+    try {
+      setLoadingAllRequests(true);
+      const q = query(
+        collection(db, "requests"),
+        orderBy("dateSubmitted", "desc")
+      );
+
+      const querySnapshot = await getDocs(q);
+      const requests: Request[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        requests.push({
+          id: doc.id,
+          ...data,
+          dateSubmitted: data.dateSubmitted || new Date().toISOString(),
+        } as Request);
+      });
+      setAllRequests(requests);
+    } catch (error) {
+      console.error("Error fetching all requests:", error);
+    } finally {
+      setLoadingAllRequests(false);
+    }
+  };
+
+  const handleUpdateRequestStatus = async (requestId: string | undefined, isResponded: boolean) => {
+    if (!requestId) {
+      console.error("Request ID is undefined");
+      return;
+    }
+
+    try {
+      const now = new Date().toISOString();
+      await updateDoc(doc(db, "requests", requestId), {
+        isResponded,
+        status: isResponded ? 'responded' : 'pending',
+        respondedAt: isResponded ? now : null,
+        respondedBy: user?.email,
+      });
+
+      // Update local state
+      setTodayRequests(prev =>
+        prev.map(req =>
+          req.id === requestId
+            ? {
+                ...req,
+                isResponded,
+                status: isResponded ? 'responded' : 'pending',
+                respondedAt: isResponded ? now : undefined,
+                respondedBy: user?.email
+              }
+            : req
+        )
+      );
+
+      setAllRequests(prev =>
+        prev.map(req =>
+          req.id === requestId
+            ? {
+                ...req,
+                isResponded,
+                status: isResponded ? 'responded' : 'pending',
+                respondedAt: isResponded ? now : undefined,
+                respondedBy: user?.email
+              }
+            : req
+        )
+      );
+    } catch (error) {
+      console.error("Error updating request status:", error);
+      alert("Error updating request status. Please try again.");
     }
   };
 
@@ -413,7 +535,26 @@ export default function DashboardPage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
-        return <TrafficChart />;
+        return (
+          <div className="space-y-6">
+            <TrafficChart />
+            <div className="space-y-4">
+              {loadingRequests ? (
+                <div className="flex items-center justify-center min-h-[200px]">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading requests...</p>
+                  </div>
+                </div>
+              ) : (
+                <RequestsTable
+                  requests={todayRequests}
+                  onUpdateStatus={handleUpdateRequestStatus}
+                />
+              )}
+            </div>
+          </div>
+        );
 
       case "aircraft":
         return (
@@ -834,13 +975,31 @@ export default function DashboardPage() {
       case "requests":
         return (
           <div className="space-y-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Flight Requests</h2>
-              <p className="text-gray-600 mb-6">Review and manage flight training requests</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button>View Pending Requests</Button>
-                <Button variant="outline">Request History</Button>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">All Flight Requests</h2>
+                <Button
+                  variant="outline"
+                  onClick={fetchAllRequests}
+                  disabled={loadingAllRequests}
+                  size="sm"
+                >
+                  {loadingAllRequests ? "Refreshing..." : "Refresh"}
+                </Button>
               </div>
+              {loadingAllRequests && allRequests.length === 0 ? (
+                <div className="flex items-center justify-center min-h-[200px]">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading all requests...</p>
+                  </div>
+                </div>
+              ) : (
+                <RequestsTable
+                  requests={allRequests}
+                  onUpdateStatus={handleUpdateRequestStatus}
+                />
+              )}
             </div>
           </div>
         );
@@ -894,7 +1053,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -905,7 +1064,7 @@ export default function DashboardPage() {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 lg:translate-x-0 lg:static lg:inset-0
+        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 overflow-y-auto lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
@@ -969,7 +1128,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col ml-0 lg:ml-64">
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 lg:hidden">
           <div className="px-4 py-4">
@@ -991,7 +1150,7 @@ export default function DashboardPage() {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-gray-50">
           <div className="p-6">
             {renderTabContent()}
           </div>

@@ -8,12 +8,14 @@ interface AircraftImageCarouselProps {
   images: string[];
   alt: string;
   className?: string;
+  loading?: boolean;
 }
 
 export const AircraftImageCarousel: React.FC<AircraftImageCarouselProps> = ({
   images,
   alt,
   className = "",
+  loading = false,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -25,8 +27,26 @@ export const AircraftImageCarousel: React.FC<AircraftImageCarouselProps> = ({
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  if (loading) {
+    return (
+      <div className={`relative w-full h-64 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center ${className}`}>
+        <div className="text-center text-gray-400">
+          <div className="w-8 h-8 bg-gray-300 rounded-full mx-auto mb-2 animate-pulse"></div>
+          <p className="text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!images || images.length === 0) {
-    return null;
+    return (
+      <div className={`relative w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center ${className}`}>
+        <div className="text-center text-gray-400">
+          <div className="w-8 h-8 bg-gray-300 rounded-full mx-auto mb-2"></div>
+          <p className="text-sm">No images available</p>
+        </div>
+      </div>
+    );
   }
 
   return (

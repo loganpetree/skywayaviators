@@ -3,41 +3,32 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { incrementPageLoadCount, db } from "@/lib/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { incrementPageLoadCount } from "@/lib/firebase";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { Button } from "@/components/ui/button";
 import { Carousel } from "@/components/ui/apple-cards-carousel";
 import { AircraftImageCarousel } from "@/components/AircraftImageCarousel";
+import { useAircraftStore } from "@/stores/aircraftStore";
 import { Aircraft } from "@/types/aircraft";
 
 export default function Home() {
   const router = useRouter();
-  const [aircraft, setAircraft] = useState<Aircraft[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { aircraft, loading, error, fetchAircraft, fetched } = useAircraftStore();
 
-  // Fetch aircraft data from Firebase
+  // Fetch aircraft data from store if not already fetched
   useEffect(() => {
-    const fetchAircraft = async () => {
-      try {
-        const aircraftCollection = collection(db, 'aircraft');
-        const q = query(aircraftCollection, where('isHidden', '==', false));
-        const aircraftSnapshot = await getDocs(q);
-        const aircraftList = aircraftSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Aircraft[];
+    console.log('🏠 Main Page:', {
+      aircraftCount: aircraft.length,
+      loading,
+      fetched,
+      error
+    })
 
-        setAircraft(aircraftList);
-      } catch (error) {
-        console.error('Error fetching aircraft:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAircraft();
-  }, []);
+    if (!fetched) {
+      console.log('🔄 Main Page: Fetching aircraft...')
+      fetchAircraft();
+    }
+  }, [fetched, fetchAircraft, aircraft.length, loading, error]);
 
   // Program cards data for carousel
   const programCards = [
@@ -190,18 +181,18 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-b from-white to-gray-50" style={{
-        backgroundImage: `url('/clouds.jpg')`,
+        backgroundImage: `url('/N218YZ/9C767A92ED0B_ID.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}>
         {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-white/60"></div>
+        <div className="absolute inset-0 bg-white/80"></div>
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left Column - Content */}
-            <div className="space-y-8 text-center lg:text-left">
+          <div className="flex justify-center">
+            {/* Centered Content */}
+            <div className="space-y-8 text-center max-w-4xl">
               {/* Badge */}
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
                 <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
@@ -211,15 +202,15 @@ export default function Home() {
               {/* Main Heading */}
               <div className="space-y-4">
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">
-                  Accelerated Flight Training
+                  From Zero to 1,500
                 </h1>
-                <p className="text-xl md:text-2xl text-gray-600 max-w-xl leading-relaxed">
+                <p className="text-xl md:text-2xl text-gray-600 max-w-3xl leading-relaxed">
                   Transform your dreams into reality with Lancaster&apos;s premier flight training. Join hundreds of successful pilots who started their aviation careers with us.
                 </p>
               </div>
 
               {/* Sub Description - Stats */}
-              <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+              <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-8">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -238,29 +229,6 @@ export default function Home() {
                   </div>
                   <span className="text-gray-700 font-semibold">Over 170 Students</span>
                 </div>
-              </div>
-
-              {/* CTA Button */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-3">
-                  Start Flying Today
-                </Button>
-                <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 text-lg px-8 py-3">
-                  Explore Our Fleet
-                </Button>
-              </div>
-            </div>
-
-            {/* Right Column - Image Section */}
-            <div className="relative hidden lg:block">
-              <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl">
-                <Image
-                  src="/cockpit.jpeg"
-                  alt="Aircraft cockpit interior"
-                  fill
-                  className="object-contain"
-                  priority
-                />
               </div>
             </div>
           </div>
@@ -382,15 +350,16 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {aircraft.map((plane) => (
+              {aircraft.map((plane: Aircraft) => (
                 <div
                   key={plane.id}
                   className="bg-white rounded-lg shadow-lg overflow-hidden relative cursor-pointer hover:shadow-xl transition-shadow duration-300"
                   onClick={() => router.push(`/aircraft/${plane.tailNumber}`)}
                 >
                   <AircraftImageCarousel
-                    images={plane.images.map(img => img.large)}
+                    images={plane.images?.map((img: any) => img.large) || []}
                     alt={`${plane.type} ${plane.model} ${plane.tailNumber} Aircraft`}
+                    loading={loading}
                   />
                   {plane.equipment && plane.equipment.includes('IFR') && (
                     <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full z-20">
@@ -406,7 +375,13 @@ export default function Home() {
                       <span className="text-sm text-gray-500">Up to {plane.capacity} occupants</span>
                       <span className="text-sm text-gray-500">${plane.hourlyRate}/hr</span>
                     </div>
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/aircraft/${plane.tailNumber}`);
+                      }}
+                    >
                       Book Now
                     </Button>
                   </div>

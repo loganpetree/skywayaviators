@@ -1,104 +1,21 @@
 'use client';
 
 import { Button } from "@/components/ui/button"
-import { AlertCircle } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { AlertCircle, MapPin, Share, DollarSign, Users, Plane, Gauge, Shield, Check, Award, CheckCircle, Camera } from "lucide-react"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { AircraftImageCarousel } from '@/components/AircraftImageCarousel'
+import GalleryGrid from '@/components/GalleryGrid'
+import { useAircraftStore } from "@/stores/aircraftStore"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { collection, addDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
-// Aircraft data
-const aircraftData = {
-  'N7774A': {
-    name: 'CESSNA 172F',
-    tailNumber: 'N7774A',
-    images: [
-      "/N7774A/FD92E9C557B6_IDa.jpg",
-      "/N7774A/34EB87791B5D_ID.jpg",
-      "/N7774A/783EF3A33AED_ID.jpg",
-      "/N7774A/A4CCF3658C36_ID.jpg",
-      "/N7774A/A82A01ACAF86_ID.jpg",
-      "/N7774A/B2914FEF8332_ID.jpg",
-      "/N7774A/C138685E0DD8_ID.jpg",
-      "/N7774A/F43DCA2EDC01_ID.jpg",
-      "/N7774A/FD92E9C557B6_ID.jpg"
-    ],
-    description: 'Perfect for short to medium-range flights with exceptional comfort and speed.',
-    specifications: {
-      passengers: 'Up to 4 occupants',
-      range: '695 nautical miles',
-      speed: '140 knots cruise',
-      engine: 'Continental O-300',
-      features: ['IFR Equipped', 'GPS Navigation', 'Autopilot']
-    },
-    pricing: {
-      hourly: '$170/hr',
-      blockHours: '$150/hr (5+ hours)'
-    },
-    location: 'Lancaster, TX',
-    totalFlightHours: 12500,
-    yearsOfService: 15,
-    certifications: ['IFR Certified', 'GPS Equipped', 'Autopilot Ready']
-  },
-  'N2500Q': {
-    name: 'PIPER PA-28',
-    tailNumber: 'N2500Q',
-    images: [
-      "/N2500Q/8DE8218EE4CF_ID.jpg",
-      "/N2500Q/7FECF156B295_ID.jpg",
-      "/N2500Q/9A5031CE2B04_ID.jpg",
-      "/N2500Q/B540408DB70D_ID.jpg",
-      "/N2500Q/B7D4FDF9FBAC_ID.jpg",
-      "/N2500Q/F88897932D34_ID.jpg"
-    ],
-    description: 'Perfect for short trips and personal travel with exceptional efficiency.',
-    specifications: {
-      passengers: 'Up to 2 occupants',
-      range: '500 nautical miles',
-      speed: '120 knots cruise',
-      engine: 'Lycoming O-235',
-      features: ['VFR Navigation', 'GPS', 'Intercom']
-    },
-    pricing: {
-      hourly: '$90/hr',
-      blockHours: '$80/hr (5+ hours)'
-    },
-    location: 'Lancaster, TX',
-    totalFlightHours: 8900,
-    yearsOfService: 12,
-    certifications: ['VFR Certified', 'GPS Equipped', 'Dual Controls']
-  },
-  'N218YZ': {
-    name: 'CESSNA 150',
-    tailNumber: 'N218YZ',
-    images: [
-      "/N218YZ/9C767A92ED0B_ID.jpg",
-      "/N218YZ/27451B3D1D70_ID.jpg",
-      "/N218YZ/921E7FAAF989_ID.jpg",
-      "/N218YZ/A2BA798A951F_ID.jpg",
-      "/N218YZ/BD862FCFED31_ID.jpg",
-      "/N218YZ/E1F50B271DD2_ID.jpg"
-    ],
-    description: 'Reliable and efficient aircraft perfect for personal and business travel.',
-    specifications: {
-      passengers: 'Up to 2 occupants',
-      range: '350 nautical miles',
-      speed: '110 knots cruise',
-      engine: 'Continental O-200',
-      features: ['VFR Navigation', 'Basic GPS', 'Dual Controls']
-    },
-    pricing: {
-      hourly: '$90/hr',
-      blockHours: '$80/hr (5+ hours)'
-    },
-    location: 'Lancaster, TX',
-    totalFlightHours: 7200,
-    yearsOfService: 18,
-    certifications: ['VFR Certified', 'Basic GPS', 'Training Ready']
-  }
-};
-
-// Type definitions
+// Type definitions for local aircraft data (fallback)
 interface AircraftData {
   name: string;
   tailNumber: string;
@@ -126,29 +43,139 @@ export default function AircraftDetailPage() {
   const router = useRouter()
   const tailNumber = params.tailNumber as string
 
-  const [aircraft, setAircraft] = useState<AircraftData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [showAllPhotos, setShowAllPhotos] = useState(false)
+  const [showBookingDialog, setShowBookingDialog] = useState(false)
+  const [bookingForm, setBookingForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    selfInsured: false,
+    interestType: '' as 'course' | 'rental' | 'timeBuilding' | ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
 
-  // Fetch aircraft data
+  const {
+    aircraft: storeAircraft,
+    loading: storeLoading,
+    error: storeError,
+    fetchAircraft,
+    getAircraftByTailNumber,
+    fetched
+  } = useAircraftStore()
+
+  // Get aircraft from store or fetch if not available
+  const aircraft = getAircraftByTailNumber(tailNumber)
+
+  console.log('🛩️ Aircraft Details Page:', {
+    tailNumber,
+    aircraftFound: !!aircraft,
+    storeLoading,
+    fetched,
+    aircraft: aircraft ? { id: aircraft.id, tailNumber: aircraft.tailNumber, type: aircraft.type } : null
+  })
+
+  // If aircraft not in store and not fetched yet, fetch all aircraft
   useEffect(() => {
-    if (!tailNumber) return
+    if (!aircraft && !fetched && !storeLoading) {
+      console.log('🔄 Aircraft Details: Fetching aircraft from store...')
+      fetchAircraft()
+    }
+  }, [aircraft, fetched, storeLoading, fetchAircraft])
+
+  // If aircraft not found after fetching, redirect
+  useEffect(() => {
+    if (fetched && !storeLoading && !aircraft) {
+      console.log('❌ Aircraft Details: Aircraft not found with tailNumber:', tailNumber)
+      router.push('/#fleet')
+    }
+  }, [fetched, storeLoading, aircraft, tailNumber, router])
+
+  // Loading state
+  const loading = storeLoading || (!aircraft && !fetched)
+
+  // Validation functions
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
+    return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))
+  }
+
+  const handleBookingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!aircraft) {
+      console.error('Aircraft information not available')
+      return
+    }
+
+    // Validate required fields
+    if (!bookingForm.firstName || !bookingForm.lastName || !bookingForm.email || !bookingForm.phone || !bookingForm.interestType) {
+      console.error('Missing required fields')
+      return
+    }
+
+    // Validate email format
+    if (!validateEmail(bookingForm.email)) {
+      console.error('Invalid email format')
+      return
+    }
+
+    // Validate phone format
+    if (!validatePhone(bookingForm.phone)) {
+      console.error('Invalid phone format')
+      return
+    }
+
+    setIsSubmitting(true)
 
     try {
-      setLoading(true)
-      const aircraftInfo = aircraftData[tailNumber as keyof typeof aircraftData]
-
-      if (aircraftInfo) {
-        setAircraft(aircraftInfo)
-      } else {
-        router.push('/#fleet')
+      const requestData = {
+        firstName: bookingForm.firstName,
+        lastName: bookingForm.lastName,
+        email: bookingForm.email,
+        phone: bookingForm.phone,
+        selfInsured: bookingForm.selfInsured,
+        interestType: bookingForm.interestType,
+        aircraftTailNumber: aircraft.tailNumber,
+        aircraftType: aircraft.type,
+        aircraftModel: aircraft.model,
+        dateSubmitted: new Date().toISOString(),
+        status: 'pending',
+        isResponded: false
       }
-    } catch (err) {
-      console.error('Error fetching aircraft:', err)
-      router.push('/#fleet')
+
+      await addDoc(collection(db, 'requests'), requestData)
+
+      // Show success state instead of alert
+      setShowSuccess(true)
+
+      // Reset form after 5 seconds and close dialog
+      setTimeout(() => {
+        setShowBookingDialog(false)
+        setShowSuccess(false)
+        setBookingForm({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          selfInsured: false,
+          interestType: ''
+        })
+      }, 5000)
+
+    } catch (error) {
+      console.error('Error submitting booking request:', error)
+      // Could add error state here if needed
     } finally {
-      setLoading(false)
+      setIsSubmitting(false)
     }
-  }, [tailNumber, router])
+  }
 
   // Render loading state
   if (loading) {
@@ -230,7 +257,7 @@ export default function AircraftDetailPage() {
 
       {/* Aircraft Detail Section */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl lg:max-w-none mx-auto">
           {/* Back Button */}
           <button
             onClick={() => router.back()}
@@ -242,80 +269,442 @@ export default function AircraftDetailPage() {
             Back to Fleet
           </button>
 
-          {/* Full Width Image Gallery */}
-          <div className="mb-12">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden max-w-4xl mx-auto">
-              <AircraftImageCarousel
-                images={aircraft.images}
-                alt={`${aircraft.name} ${aircraft.tailNumber} Aircraft`}
+          {/* Aircraft Gallery and Details */}
+          <div className="max-w-4xl lg:max-w-[80vw] mx-auto">
+            {/* Gallery Section */}
+            {!showAllPhotos ? (
+              <GalleryGrid
+                galleryImages={aircraft.images && aircraft.images.length > 0
+                  ? aircraft.images.map((imageObj: any, index: number) => ({
+                      src: imageObj.large || imageObj.medium || imageObj.original || imageObj.small,
+                      alt: `${aircraft.type} ${aircraft.model} ${aircraft.tailNumber} - Photo ${index + 1}`,
+                      isPlaceholder: false
+                    }))
+                  : []
+                }
+                instructor={aircraft.type || aircraft.model || 'Aircraft'}
+                handleShowAllPhotos={() => setShowAllPhotos(true)}
+                loading={loading}
+                aircraftImages={aircraft.images || []}
               />
+            ) : (
+              /* Full Gallery View */
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-gray-900">All Photos</h2>
+                  <Button
+                    onClick={() => setShowAllPhotos(false)}
+                    variant="outline"
+                  >
+                    Back to Gallery
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {loading ? (
+                    // Loading placeholders for full gallery view
+                    Array.from({ length: Math.min(aircraft?.images?.length || 6, 9) }, (_, index) => (
+                      <div key={index} className="aspect-square relative overflow-hidden rounded-lg bg-gray-200 animate-pulse flex items-center justify-center">
+                        <div className="text-center text-gray-400">
+                          <Camera className="w-8 h-8 mx-auto mb-2" />
+                          <p className="text-sm">Loading...</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    aircraft.images && aircraft.images.map((imageObj: any, index: number) => (
+                      <div key={index} className="aspect-square relative overflow-hidden rounded-lg">
+                        <img
+                          src={imageObj.large || imageObj.original || imageObj.medium || imageObj.small}
+                          alt={`${aircraft.type} ${aircraft.model} ${aircraft.tailNumber} - Photo ${index + 1}`}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+      {/* Main Content Container */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Title and Actions Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between py-8 border-b border-gray-200 gap-4">
+          <div className="flex-1">
+            <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+              {aircraft.type} {aircraft.model}
+            </h1>
+            <div className="flex items-center gap-2 text-gray-600 mb-1">
+              <MapPin className="w-4 h-4" />
+              <span>Lancaster, TX</span>
+            </div>
+            <p className="text-gray-600">
+              {aircraft.tailNumber} • {aircraft.capacity} occupants
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:bg-gray-50"
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                // Optional: Show feedback
+                alert('Link copied to clipboard!');
+              }}
+            >
+              <Share className="w-4 h-4 mr-2" />
+              <span>Share</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Bar */}
+        <div className="flex flex-wrap items-center gap-4 sm:gap-8 py-6 text-sm text-gray-600 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-4 h-4" />
+            <span className="font-medium text-gray-900">${aircraft.hourlyRate}</span>
+            <span>per hour</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Users className="w-4 h-4" />
+            <span>Up to {aircraft.capacity} occupants</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Plane className="w-4 h-4" />
+            <span>{aircraft.type} {aircraft.model}</span>
+          </div>
+          {aircraft.equipment && aircraft.equipment.length > 0 && (
+            <div className="flex items-center gap-1">
+              <Shield className="w-4 h-4" />
+              <span>{aircraft.equipment.join(', ')}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <Award className="w-4 h-4" />
+            <span>FAA Certified</span>
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16 py-12">
+          {/* Left Content */}
+          <div className="lg:col-span-2 space-y-10">
+            {/* Key Features */}
+            <div className="space-y-8 pb-8 border-b border-gray-200">
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <Plane className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-1">Premium Aircraft</h4>
+                  <p className="text-gray-600">
+                    Well-maintained {aircraft.type} {aircraft.model} perfect for flight training and personal use.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <Shield className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-1">Fully Certified</h4>
+                  <p className="text-gray-600">
+                    Meets all FAA standards and regularly inspected for safety.
+                  </p>
             </div>
           </div>
 
-          {/* Aircraft Information */}
-          <div className="max-w-4xl mx-auto">
-            <div className="space-y-8">
-              {/* Header */}
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <Users className="w-5 h-5 text-purple-600" />
+                </div>
               <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  {aircraft.name}
-                </h1>
-                <p className="text-xl text-gray-600 font-medium">
-                  {aircraft.tailNumber}
-                </p>
-                <p className="text-gray-600 mt-4">
+                  <h4 className="font-medium text-gray-900 mb-1">Flexible Capacity</h4>
+                  <p className="text-gray-600">
+                    Seats up to {aircraft.capacity} occupants comfortably for various mission requirements.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* About */}
+            <div id="about" className="space-y-4 pb-8 border-b border-gray-200">
+              <h3 className="text-xl font-medium text-gray-900">About this aircraft</h3>
+              <p className="text-gray-700 leading-relaxed text-base">
                   {aircraft.description}
                 </p>
               </div>
 
-              {/* Pricing */}
-              <div className="bg-blue-50 rounded-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Pricing</h2>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Hourly Rate</span>
-                    <span className="text-2xl font-bold text-blue-600">{aircraft.pricing.hourly}</span>
+            {/* Specifications */}
+            <div id="specifications" className="space-y-8 pb-8 border-b border-gray-200">
+              <h3 className="text-xl font-medium text-gray-900">Aircraft Details</h3>
+
+              <div className="space-y-8">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-4">Aircraft Information</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3 py-3 px-4 bg-gray-50 rounded-lg">
+                      <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
+                      <div>
+                        <span className="text-gray-800 font-medium">Aircraft Type</span>
+                        <p className="text-gray-600 text-sm">{aircraft.type} {aircraft.model}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 py-3 px-4 bg-gray-50 rounded-lg">
+                      <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
+                      <div>
+                        <span className="text-gray-800 font-medium">Tail Number</span>
+                        <p className="text-gray-600 text-sm">{aircraft.tailNumber}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 py-3 px-4 bg-gray-50 rounded-lg">
+                      <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
+                      <div>
+                        <span className="text-gray-800 font-medium">Capacity</span>
+                        <p className="text-gray-600 text-sm">Up to {aircraft.capacity} occupants</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 py-3 px-4 bg-gray-50 rounded-lg">
+                      <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
+                      <div>
+                        <span className="text-gray-800 font-medium">Hourly Rate</span>
+                        <p className="text-gray-600 text-sm">${aircraft.hourlyRate}/hour</p>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Block Hours (5+ hours)</span>
-                    <span className="text-xl font-semibold text-blue-600">{aircraft.pricing.blockHours}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Specifications */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Specifications</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {aircraft.equipment && aircraft.equipment.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">Capacity & Performance</h3>
-                    <ul className="space-y-2 text-gray-600">
-                      <li><strong>Occupants:</strong> {aircraft.specifications.passengers}</li>
-                      <li><strong>Range:</strong> {aircraft.specifications.range}</li>
-                      <li><strong>Cruise Speed:</strong> {aircraft.specifications.speed}</li>
-                      <li><strong>Engine:</strong> {aircraft.specifications.engine}</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">Features</h3>
-                    <ul className="space-y-2 text-gray-600">
-                      {aircraft.specifications.features.map((feature: string, index: number) => (
-                        <li key={index}>• {feature}</li>
+                    <h4 className="font-medium text-gray-900 mb-4">Equipment & Features</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {aircraft.equipment.map((equipment: string, index: number) => (
+                        <div key={index} className="flex items-center gap-3 py-3 px-4 bg-gray-50 rounded-lg">
+                          <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
+                          <span className="text-gray-800 font-medium">{equipment}</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
-                </div>
-              </div>
+                )}
 
-              {/* Booking Button */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
-                <h3 className="text-xl font-bold mb-2">Ready to Fly?</h3>
-                <p className="mb-4 opacity-90">
-                  Book this aircraft for your next flight experience.
-                </p>
-                <Button className="bg-white text-blue-600 hover:bg-gray-50 font-bold px-8 py-3 text-lg">
-                  Book {aircraft.tailNumber}
+                {aircraft.features && aircraft.features.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-4">Additional Features</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {aircraft.features.map((feature: string, index: number) => (
+                        <div key={index} className="flex items-center gap-3 py-3 px-4 bg-gray-50 rounded-lg">
+                          <Check className="w-4 h-4 flex-shrink-0 text-green-600" />
+                          <span className="text-gray-800 font-medium">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar - Booking Card */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8">
+              <Card className="border-2 border-gray-200 shadow-xl">
+                <CardContent className="p-8">
+                  <div className="text-center mb-8">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to fly?</h3>
+                    <p className="text-gray-600">Book this aircraft for your next flight</p>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Hourly Rate</span>
+                      <span className="font-semibold text-lg">${aircraft.hourlyRate}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Capacity</span>
+                      <span className="font-semibold">Up to {aircraft.capacity}</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Aircraft</span>
+                        <span className="font-medium">{aircraft.type} {aircraft.model}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-gray-600">Tail Number</span>
+                        <span className="font-medium">{aircraft.tailNumber}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 text-base rounded-lg mb-4">
+                        Book This Aircraft
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Book This Aircraft</DialogTitle>
+                      </DialogHeader>
+
+                      {showSuccess ? (
+                        <div className="text-center py-8 space-y-4">
+                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                            <CheckCircle className="w-8 h-8 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Request Submitted Successfully!</h3>
+                            <p className="text-gray-600">
+                              Thank you for your interest in {aircraft?.type} {aircraft?.model}.
+                              We will contact you at <strong>{bookingForm.email}</strong> within 24 hours to discuss your request.
+                            </p>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            This dialog will close automatically in a few seconds...
+                          </div>
+                        </div>
+                      ) : (
+                        <form onSubmit={handleBookingSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName">First Name *</Label>
+                            <Input
+                              id="firstName"
+                              type="text"
+                              value={bookingForm.firstName}
+                              onChange={(e) => setBookingForm(prev => ({ ...prev, firstName: e.target.value }))}
+                              placeholder="Enter first name"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName">Last Name *</Label>
+                            <Input
+                              id="lastName"
+                              type="text"
+                              value={bookingForm.lastName}
+                              onChange={(e) => setBookingForm(prev => ({ ...prev, lastName: e.target.value }))}
+                              placeholder="Enter last name"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email Address *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={bookingForm.email}
+                            onChange={(e) => setBookingForm(prev => ({ ...prev, email: e.target.value }))}
+                            placeholder="Enter your email"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            value={bookingForm.phone}
+                            onChange={(e) => setBookingForm(prev => ({ ...prev, phone: e.target.value }))}
+                            placeholder="Enter your phone number"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Interest Type *</Label>
+                          <RadioGroup
+                            value={bookingForm.interestType}
+                            onValueChange={(value: 'course' | 'rental' | 'timeBuilding') =>
+                              setBookingForm(prev => ({ ...prev, interestType: value }))
+                            }
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="course" id="course" />
+                              <Label htmlFor="course">Course Program</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="rental" id="rental" />
+                              <Label htmlFor="rental">Aircraft Rental</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="timeBuilding" id="timeBuilding" />
+                              <Label htmlFor="timeBuilding">Time Building</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="selfInsured"
+                            checked={bookingForm.selfInsured}
+                            onChange={(e) =>
+                              setBookingForm(prev => ({ ...prev, selfInsured: e.target.checked }))
+                            }
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <Label htmlFor="selfInsured">I am self-insured</Label>
+                        </div>
+
+                        <div className="flex justify-end space-x-2 pt-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowBookingDialog(false)}
+                            disabled={isSubmitting}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                          </Button>
+                        </div>
+                      </form>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+
+                  <Button
+                    onClick={() => router.push('/#fleet')}
+                    variant="outline"
+                    className="w-full font-medium py-4 text-base rounded-lg border-2 hover:bg-gray-50"
+                  >
+                    Back to Fleet
                 </Button>
+
+                  <div className="mt-8 pt-6 border-t border-gray-200 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-green-100 rounded-md flex items-center justify-center">
+                        <Shield className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="text-sm text-gray-600">Fully insured</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <span className="text-sm text-gray-600">Regular maintenance</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center">
+                        <Award className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <span className="text-sm text-gray-600">FAA certified</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
               </div>
             </div>
           </div>
