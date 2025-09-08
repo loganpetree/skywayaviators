@@ -22,11 +22,11 @@ function programNameToSlug(name: string): string {
 }
 
 // Utility function to convert URL slug back to program name
-function slugToProgramName(slug: string): string {
-  return slug
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, l => l.toUpperCase()); // Title case
-}
+// function slugToProgramName(slug: string): string {
+//   return slug
+//     .replace(/-/g, ' ')
+//     .replace(/\b\w/g, l => l.toUpperCase()); // Title case
+// }
 
 export default function ProgramDetail() {
   const params = useParams();

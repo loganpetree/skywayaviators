@@ -33,6 +33,7 @@ import { Aircraft } from "@/types/aircraft";
 import { Request } from "@/types/request";
 import { Program } from "@/types/program";
 import { Package } from "@/types/package";
+import { Testimonial } from "@/types";
 
 type TabType = "overview" | "aircraft" | "programs" | "packages" | "requests" | "reviews" | "flight-hours";
 
