@@ -21,17 +21,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Aircraft } from "@/types/aircraft";
 import { Request } from "@/types/request";
+import { Program } from "@/types/program";
+import { Package } from "@/types/package";
 
-type TabType = "overview" | "aircraft" | "packages" | "requests" | "testimonials" | "flight-hours";
+type TabType = "overview" | "aircraft" | "programs" | "packages" | "requests" | "reviews" | "flight-hours";
 
 const tabs = [
   { id: "overview" as TabType, label: "Overview", icon: "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" },
   { id: "aircraft" as TabType, label: "Aircraft", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
-  { id: "packages" as TabType, label: "Packages", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
+  { id: "programs" as TabType, label: "Programs", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
+  { id: "packages" as TabType, label: "Packages", icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" },
   { id: "requests" as TabType, label: "Requests", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
-  { id: "testimonials" as TabType, label: "Testimonials", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
+  { id: "reviews" as TabType, label: "Reviews", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
   { id: "flight-hours" as TabType, label: "Flight Hours", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
 ];
 
@@ -47,11 +58,30 @@ export default function DashboardPage() {
   const [aircraftList, setAircraftList] = useState<Aircraft[]>([]);
   const [loadingAircraft, setLoadingAircraft] = useState(true);
   const [editingAircraft, setEditingAircraft] = useState<Aircraft | null>(null);
+  const [programsList, setProgramsList] = useState<Program[]>([]);
+  const [loadingPrograms, setLoadingPrograms] = useState(true);
+  const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+  const [programImagePreviews, setProgramImagePreviews] = useState<string[]>([]);
+  const [existingProgramImages, setExistingProgramImages] = useState<{ original: string; large: string; medium: string; small: string }[]>([]);
+  const [packagesList, setPackagesList] = useState<Package[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(true);
+  const [editingPackage, setEditingPackage] = useState<Package | null>(null);
+  const [packageImagePreviews, setPackageImagePreviews] = useState<string[]>([]);
+  const [existingPackageImages, setExistingPackageImages] = useState<{ original: string; large: string; medium: string; small: string }[]>([]);
   const [todayRequests, setTodayRequests] = useState<Request[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [allRequests, setAllRequests] = useState<Request[]>([]);
   const [loadingAllRequests, setLoadingAllRequests] = useState(false);
   const [existingImages, setExistingImages] = useState<{ original: string; large: string; medium: string; small: string }[]>([]);
+  const [reviewsList, setReviewsList] = useState<Testimonial[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [editingReview, setEditingReview] = useState<Testimonial | null>(null);
+  const [editReviewForm, setEditReviewForm] = useState({
+    rating: 5,
+    firstname: "",
+    lastname: "",
+    testimonial: "",
+  });
   const [aircraftForm, setAircraftForm] = useState<{
     tailNumber: string;
     type: string;
@@ -77,6 +107,36 @@ export default function DashboardPage() {
     isHidden: false,
     year: undefined,
   });
+  const [programForm, setProgramForm] = useState<{
+    images: File[];
+    name: string;
+    description: string;
+    features: string[];
+    price: string;
+  }>({
+    images: [],
+    name: "",
+    description: "",
+    features: [],
+    price: "",
+  });
+  const [packageForm, setPackageForm] = useState<{
+    images: File[];
+    name: string;
+    description: string;
+    features: string[];
+    price: string;
+    duration: string;
+    category: string;
+  }>({
+    images: [],
+    name: "",
+    description: "",
+    features: [],
+    price: "",
+    duration: "",
+    category: "",
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -84,8 +144,11 @@ export default function DashboardPage() {
       if (user) {
         setUser(user);
         fetchAircraft(); // Fetch aircraft when user is authenticated
+        fetchPrograms(); // Fetch programs when user is authenticated
+        fetchPackages(); // Fetch packages when user is authenticated
         fetchTodayRequests(); // Fetch today's requests when user is authenticated
         fetchAllRequests(); // Fetch all requests when user is authenticated
+        fetchReviews(); // Fetch reviews when user is authenticated
       } else {
         router.push("/admin");
       }
@@ -104,6 +167,22 @@ export default function DashboardPage() {
         }
       });
       setImagePreviews([]);
+
+      // Clean up program image previews
+      programImagePreviews.forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+      setProgramImagePreviews([]);
+
+      // Clean up package image previews
+      packageImagePreviews.forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+      setPackageImagePreviews([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dialogOpen]);
@@ -119,6 +198,20 @@ export default function DashboardPage() {
 
   const handleAircraftFormChange = (field: keyof typeof aircraftForm, value: string | number | File[] | string[] | undefined) => {
     setAircraftForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleProgramFormChange = (field: keyof typeof programForm, value: string | string[] | File[]) => {
+    setProgramForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handlePackageFormChange = (field: keyof typeof packageForm, value: string | string[] | File[]) => {
+    setPackageForm(prev => ({
       ...prev,
       [field]: value
     }));
@@ -188,6 +281,144 @@ export default function DashboardPage() {
 
       handleAircraftFormChange('images', newFiles);
       setImagePreviews(newPreviews);
+    }
+
+    setDraggedIndex(null);
+  };
+
+  const createProgramImagePreviews = (files: File[]) => {
+    // Clean up existing previews
+    programImagePreviews.forEach(url => {
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
+
+    const newPreviews: string[] = [];
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const previewUrl = URL.createObjectURL(file);
+        newPreviews.push(previewUrl);
+      }
+    });
+
+    setProgramImagePreviews(newPreviews);
+  };
+
+  const handleProgramDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleProgramDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleProgramDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  const handleProgramDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      return;
+    }
+
+    if (editingProgram) {
+      // Handle existing images reordering
+      const newExistingImages = [...existingProgramImages];
+      const [draggedImage] = newExistingImages.splice(draggedIndex, 1);
+      newExistingImages.splice(dropIndex, 0, draggedImage);
+
+      const newPreviews = [...programImagePreviews];
+      const [draggedPreview] = newPreviews.splice(draggedIndex, 1);
+      newPreviews.splice(dropIndex, 0, draggedPreview);
+
+      setExistingProgramImages(newExistingImages);
+      setProgramImagePreviews(newPreviews);
+    } else {
+      // Handle new images reordering
+      const newFiles = [...programForm.images];
+      const [draggedFile] = newFiles.splice(draggedIndex, 1);
+      newFiles.splice(dropIndex, 0, draggedFile);
+
+      const newPreviews = [...programImagePreviews];
+      const [draggedPreview] = newPreviews.splice(draggedIndex, 1);
+      newPreviews.splice(dropIndex, 0, draggedPreview);
+
+      handleProgramFormChange('images', newFiles);
+      setProgramImagePreviews(newPreviews);
+    }
+
+    setDraggedIndex(null);
+  };
+
+  const createPackageImagePreviews = (files: File[]) => {
+    // Clean up existing previews
+    packageImagePreviews.forEach(url => {
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
+
+    const newPreviews: string[] = [];
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const previewUrl = URL.createObjectURL(file);
+        newPreviews.push(previewUrl);
+      }
+    });
+
+    setPackageImagePreviews(newPreviews);
+  };
+
+  const handlePackageDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handlePackageDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handlePackageDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  const handlePackageDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      return;
+    }
+
+    if (editingPackage) {
+      // Handle existing images reordering
+      const newExistingImages = [...existingPackageImages];
+      const [draggedImage] = newExistingImages.splice(draggedIndex, 1);
+      newExistingImages.splice(dropIndex, 0, draggedImage);
+
+      const newPreviews = [...packageImagePreviews];
+      const [draggedPreview] = newPreviews.splice(draggedIndex, 1);
+      newPreviews.splice(dropIndex, 0, draggedPreview);
+
+      setExistingPackageImages(newExistingImages);
+      setPackageImagePreviews(newPreviews);
+    } else {
+      // Handle new images reordering
+      const newFiles = [...packageForm.images];
+      const [draggedFile] = newFiles.splice(draggedIndex, 1);
+      newFiles.splice(dropIndex, 0, draggedFile);
+
+      const newPreviews = [...packageImagePreviews];
+      const [draggedPreview] = newPreviews.splice(draggedIndex, 1);
+      newPreviews.splice(dropIndex, 0, draggedPreview);
+
+      handlePackageFormChange('images', newFiles);
+      setPackageImagePreviews(newPreviews);
     }
 
     setDraggedIndex(null);
@@ -306,6 +537,439 @@ export default function DashboardPage() {
       console.error("Error fetching all requests:", error);
     } finally {
       setLoadingAllRequests(false);
+    }
+  };
+
+  const fetchPrograms = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "programs"));
+      const programs: Program[] = [];
+      querySnapshot.forEach((doc) => {
+        programs.push({ id: doc.id, ...doc.data() } as Program);
+      });
+      setProgramsList(programs);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+    } finally {
+      setLoadingPrograms(false);
+    }
+  };
+
+  const handleEditProgram = (program: Program) => {
+    setEditingProgram(program);
+
+    // Initialize existing images
+    if (program.images && program.images.length > 0) {
+      setExistingProgramImages(program.images);
+      const previews = program.images.map(imageData => imageData.medium || imageData.small || imageData.original);
+      setProgramImagePreviews(previews);
+    } else {
+      setExistingProgramImages([]);
+      setProgramImagePreviews([]);
+    }
+
+    setProgramForm({
+      images: [], // Keep as empty since we're editing existing images separately
+      name: program.name,
+      description: program.description,
+      features: program.features,
+      price: program.price || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDeleteProgram = async (programId: string) => {
+    if (confirm("Are you sure you want to delete this program?")) {
+      try {
+        await deleteDoc(doc(db, "programs", programId));
+        setProgramsList(prev => prev.filter(program => program.id !== programId));
+      } catch (error) {
+        console.error("Error deleting program:", error);
+        alert("Error deleting program. Please try again.");
+      }
+    }
+  };
+
+  const handleProgramSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Process and upload images to Firebase Storage with multiple sizes
+      let uploadedImageData: { original: string; large: string; medium: string; small: string }[] = [];
+
+      // Handle existing images (may have been reordered or deleted)
+      if (editingProgram && existingProgramImages.length > 0) {
+        uploadedImageData = [...existingProgramImages];
+      }
+
+      // Add any new images uploaded
+      if (programForm.images.length > 0) {
+        for (const imageFile of programForm.images) {
+          const baseName = `${Date.now()}_${imageFile.name.replace(/\.[^/.]+$/, "")}`;
+
+          // Create different sizes
+          const [originalBlob, largeBlob, mediumBlob, smallBlob] = await Promise.all([
+            Promise.resolve(imageFile), // Keep original as-is
+            resizeImage(imageFile, 1200, 1200), // Large
+            resizeImage(imageFile, 600, 600),   // Medium
+            resizeImage(imageFile, 200, 200),   // Small
+          ]);
+
+          // Upload all sizes
+          const uploadPromises = [
+            { size: 'original', blob: originalBlob, name: `${baseName}_original.jpg` },
+            { size: 'large', blob: largeBlob, name: `${baseName}_large.jpg` },
+            { size: 'medium', blob: mediumBlob, name: `${baseName}_medium.jpg` },
+            { size: 'small', blob: smallBlob, name: `${baseName}_small.jpg` },
+          ];
+
+          const uploadedUrls: { [key: string]: string } = {};
+
+          for (const { size, blob, name } of uploadPromises) {
+            const storageRef = ref(storage, `programs/${name}`);
+            const snapshot = await uploadBytes(storageRef, blob);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            uploadedUrls[size] = downloadURL;
+          }
+
+          uploadedImageData.push({
+            original: uploadedUrls.original,
+            large: uploadedUrls.large,
+            medium: uploadedUrls.medium,
+            small: uploadedUrls.small,
+          });
+        }
+      }
+
+      // Prepare program data
+      const programData: Partial<Program> = {
+        name: programForm.name,
+        description: programForm.description,
+        features: programForm.features,
+        price: programForm.price,
+      };
+
+      // Only add images if they exist
+      if (uploadedImageData.length > 0) {
+        programData.images = uploadedImageData;
+      }
+
+      if (editingProgram) {
+        // Update existing program
+        await updateDoc(doc(db, "programs", editingProgram.id), {
+          ...programData,
+          updatedAt: serverTimestamp(),
+        });
+        console.log("Program updated with ID:", editingProgram.id);
+      } else {
+        // Create new program
+        const docRef = await addDoc(collection(db, "programs"), {
+          ...programData,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        console.log("Program added with ID:", docRef.id);
+      }
+
+      // Close dialog and reset form
+      setDialogOpen(false);
+      setProgramForm({
+        images: [],
+        name: "",
+        description: "",
+        features: [],
+        price: "",
+      });
+
+      // Clear editing state
+      setEditingProgram(null);
+      setExistingProgramImages([]);
+
+      // Clean up program image previews
+      programImagePreviews.forEach(url => URL.revokeObjectURL(url));
+      setProgramImagePreviews([]);
+
+      // Refresh programs list
+      await fetchPrograms();
+
+      // Show success message
+      alert(editingProgram ? "Program updated successfully!" : "Program added successfully!");
+
+    } catch (error) {
+      console.error("Error saving program:", error);
+      alert("Error saving program. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const fetchPackages = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "packages"));
+      const packages: Package[] = [];
+      querySnapshot.forEach((doc) => {
+        packages.push({ id: doc.id, ...doc.data() } as Package);
+      });
+      setPackagesList(packages);
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const q = query(
+        collection(db, "reviews"),
+        orderBy("created", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      const reviews: Testimonial[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        reviews.push({
+          id: doc.id,
+          rating: data.rating,
+          testimonial: data.testimonial,
+          firstname: data.firstname,
+          lastname: data.lastname,
+          avatar: data.avatar,
+          created: data.created?.toDate() || new Date(),
+          isApproved: data.isApproved || false,
+        } as Testimonial);
+      });
+      setReviewsList(reviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleApproveReview = async (reviewId: string, isApproved: boolean) => {
+    try {
+      await updateDoc(doc(db, "reviews", reviewId), {
+        isApproved,
+        updatedAt: serverTimestamp(),
+      });
+
+      // Update local state
+      setReviewsList(prev =>
+        prev.map(review =>
+          review.id === reviewId
+            ? { ...review, isApproved }
+            : review
+        )
+      );
+    } catch (error) {
+      console.error("Error updating review approval:", error);
+      alert("Error updating review status. Please try again.");
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (confirm("Are you sure you want to delete this review?")) {
+      try {
+        await deleteDoc(doc(db, "reviews", reviewId));
+        setReviewsList(prev => prev.filter(review => review.id !== reviewId));
+      } catch (error) {
+        console.error("Error deleting review:", error);
+        alert("Error deleting review. Please try again.");
+      }
+    }
+  };
+
+  const handleEditReview = (review: Testimonial) => {
+    setEditingReview(review);
+    setEditReviewForm({
+      rating: review.rating,
+      firstname: review.firstname,
+      lastname: review.lastname,
+      testimonial: review.testimonial,
+    });
+  };
+
+  const handleUpdateReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingReview) return;
+
+    try {
+      await updateDoc(doc(db, "reviews", editingReview.id), {
+        ...editReviewForm,
+        updatedAt: serverTimestamp(),
+      });
+
+      // Update local state
+      setReviewsList(prev =>
+        prev.map(review =>
+          review.id === editingReview.id
+            ? { ...review, ...editReviewForm }
+            : review
+        )
+      );
+
+      setEditingReview(null);
+      alert("Review updated successfully!");
+    } catch (error) {
+      console.error("Error updating review:", error);
+      alert("Error updating review. Please try again.");
+    }
+  };
+
+  const handleEditPackage = (pkg: Package) => {
+    setEditingPackage(pkg);
+
+    // Initialize existing images
+    if (pkg.images && pkg.images.length > 0) {
+      setExistingPackageImages(pkg.images);
+      const previews = pkg.images.map(imageData => imageData.medium || imageData.small || imageData.original);
+      setPackageImagePreviews(previews);
+    } else {
+      setExistingPackageImages([]);
+      setPackageImagePreviews([]);
+    }
+
+    setPackageForm({
+      images: [], // Keep as empty since we're editing existing images separately
+      name: pkg.name,
+      description: pkg.description,
+      features: pkg.features,
+      price: pkg.price || "",
+      duration: pkg.duration || "",
+      category: pkg.category || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDeletePackage = async (packageId: string) => {
+    if (confirm("Are you sure you want to delete this package?")) {
+      try {
+        await deleteDoc(doc(db, "packages", packageId));
+        setPackagesList(prev => prev.filter(pkg => pkg.id !== packageId));
+      } catch (error) {
+        console.error("Error deleting package:", error);
+        alert("Error deleting package. Please try again.");
+      }
+    }
+  };
+
+  const handlePackageSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Process and upload images to Firebase Storage with multiple sizes
+      let uploadedImageData: { original: string; large: string; medium: string; small: string }[] = [];
+
+      // Handle existing images (may have been reordered or deleted)
+      if (editingPackage && existingPackageImages.length > 0) {
+        uploadedImageData = [...existingPackageImages];
+      }
+
+      // Add any new images uploaded
+      if (packageForm.images.length > 0) {
+        for (const imageFile of packageForm.images) {
+          const baseName = `${Date.now()}_${imageFile.name.replace(/\.[^/.]+$/, "")}`;
+
+          // Create different sizes
+          const [originalBlob, largeBlob, mediumBlob, smallBlob] = await Promise.all([
+            Promise.resolve(imageFile), // Keep original as-is
+            resizeImage(imageFile, 1200, 1200), // Large
+            resizeImage(imageFile, 600, 600),   // Medium
+            resizeImage(imageFile, 200, 200),   // Small
+          ]);
+
+          // Upload all sizes
+          const uploadPromises = [
+            { size: 'original', blob: originalBlob, name: `${baseName}_original.jpg` },
+            { size: 'large', blob: largeBlob, name: `${baseName}_large.jpg` },
+            { size: 'medium', blob: mediumBlob, name: `${baseName}_medium.jpg` },
+            { size: 'small', blob: smallBlob, name: `${baseName}_small.jpg` },
+          ];
+
+          const uploadedUrls: { [key: string]: string } = {};
+
+          for (const { size, blob, name } of uploadPromises) {
+            const storageRef = ref(storage, `packages/${name}`);
+            const snapshot = await uploadBytes(storageRef, blob);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            uploadedUrls[size] = downloadURL;
+          }
+
+          uploadedImageData.push({
+            original: uploadedUrls.original,
+            large: uploadedUrls.large,
+            medium: uploadedUrls.medium,
+            small: uploadedUrls.small,
+          });
+        }
+      }
+
+      // Prepare package data
+      const packageData: Partial<Package> = {
+        name: packageForm.name,
+        description: packageForm.description,
+        features: packageForm.features,
+        price: packageForm.price,
+        duration: packageForm.duration,
+        category: packageForm.category,
+      };
+
+      // Only add images if they exist
+      if (uploadedImageData.length > 0) {
+        packageData.images = uploadedImageData;
+      }
+
+      if (editingPackage) {
+        // Update existing package
+        await updateDoc(doc(db, "packages", editingPackage.id), {
+          ...packageData,
+          updatedAt: serverTimestamp(),
+        });
+        console.log("Package updated with ID:", editingPackage.id);
+      } else {
+        // Create new package
+        const docRef = await addDoc(collection(db, "packages"), {
+          ...packageData,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        console.log("Package added with ID:", docRef.id);
+      }
+
+      // Close dialog and reset form
+      setDialogOpen(false);
+      setPackageForm({
+        images: [],
+        name: "",
+        description: "",
+        features: [],
+        price: "",
+        duration: "",
+        category: "",
+      });
+
+      // Clear editing state
+      setEditingPackage(null);
+      setExistingPackageImages([]);
+
+      // Clean up package image previews
+      packageImagePreviews.forEach(url => URL.revokeObjectURL(url));
+      setPackageImagePreviews([]);
+
+      // Refresh packages list
+      await fetchPackages();
+
+      // Show success message
+      alert(editingPackage ? "Package updated successfully!" : "Package added successfully!");
+
+    } catch (error) {
+      console.error("Error saving package:", error);
+      alert("Error saving package. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -958,17 +1622,725 @@ export default function DashboardPage() {
           </div>
         );
 
+      case "programs":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Program Management</h2>
+                <p className="text-sm text-gray-600">Create and manage flight training programs</p>
+              </div>
+              <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) {
+                  setEditingProgram(null);
+                  setExistingProgramImages([]);
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    Add New Program
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader className="pb-6">
+                    <DialogTitle className="text-2xl">
+                      {editingProgram ? 'Edit Program' : 'Add New Program'}
+                    </DialogTitle>
+                    <DialogDescription className="text-base">
+                      {editingProgram
+                        ? 'Update the program details. All fields marked with * are required.'
+                        : 'Fill in the details for the new program. All fields marked with * are required.'
+                      }
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <form onSubmit={handleProgramSubmit} className="space-y-8">
+                    {/* Program Images */}
+                    <div className="space-y-2">
+                      <Label htmlFor="programImages">
+                        Program Images
+                        {editingProgram && programImagePreviews.length > 0 && (
+                          <span className="text-sm text-muted-foreground ml-2">
+                            ({programImagePreviews.length} existing)
+                          </span>
+                        )}
+                      </Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                        <input
+                          type="file"
+                          id="programImages"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            handleProgramFormChange('images', files);
+                            createProgramImagePreviews(files);
+                          }}
+                          className="hidden"
+                          disabled={isSubmitting}
+                        />
+                        <label htmlFor="programImages" className="cursor-pointer">
+                          <div className="flex flex-col items-center space-y-2">
+                            <svg
+                              className="w-8 h-8 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                              />
+                            </svg>
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium text-blue-600 hover:text-blue-500">
+                                {editingProgram ? 'Add more images' : 'Click to upload'}
+                              </span> or drag and drop
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              PNG, JPG, GIF up to 10MB each
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                      {programImagePreviews.length > 0 && (
+                        <div className="mt-4">
+                          <p className="text-sm text-gray-600 mb-2">
+                            {programImagePreviews.length} image{programImagePreviews.length !== 1 ? 's' : ''} {editingProgram ? 'loaded' : 'selected'}
+                          </p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {programImagePreviews.map((previewUrl, index) => (
+                              <div
+                                key={index}
+                                className={`relative group cursor-move ${
+                                  draggedIndex === index ? 'opacity-50' : ''
+                                }`}
+                                draggable={!isSubmitting}
+                                onDragStart={(e) => handleProgramDragStart(e, index)}
+                                onDragOver={handleProgramDragOver}
+                                onDragEnd={handleProgramDragEnd}
+                                onDrop={(e) => handleProgramDrop(e, index)}
+                              >
+                                <img
+                                  src={previewUrl}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (editingProgram) {
+                                      // Remove existing image
+                                      const newExistingImages = existingProgramImages.filter((_, i) => i !== index);
+                                      const newPreviews = programImagePreviews.filter((_, i) => i !== index);
+                                      setExistingProgramImages(newExistingImages);
+                                      setProgramImagePreviews(newPreviews);
+                                    } else {
+                                      // Remove new image
+                                      const newFiles = programForm.images.filter((_, i) => i !== index);
+                                      const newPreviews = programImagePreviews.filter((_, i) => i !== index);
+
+                                      handleProgramFormChange('images', newFiles);
+                                      // Clean up the removed preview URL
+                                      if (previewUrl.startsWith('blob:')) {
+                                        URL.revokeObjectURL(previewUrl);
+                                      }
+                                      setProgramImagePreviews(newPreviews);
+                                    }
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                  disabled={isSubmitting}
+                                >
+                                  ×
+                                </button>
+                                {/* Drag handle indicator */}
+                                <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                  Drag to reorder
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Program Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="programName">Program Name *</Label>
+                      <Input
+                        id="programName"
+                        placeholder="Private Pilot Program"
+                        value={programForm.name}
+                        onChange={(e) => handleProgramFormChange('name', e.target.value)}
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    {/* Program Price */}
+                    <div className="space-y-2">
+                      <Label htmlFor="programPrice">Price</Label>
+                      <Input
+                        id="programPrice"
+                        placeholder="Starting at $15,000"
+                        value={programForm.price}
+                        onChange={(e) => handleProgramFormChange('price', e.target.value)}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    {/* Program Description */}
+                    <div className="space-y-2">
+                      <Label htmlFor="programDescription">Description *</Label>
+                      <Textarea
+                        id="programDescription"
+                        placeholder="Describe the program, including what it includes and duration..."
+                        value={programForm.description}
+                        onChange={(e) => handleProgramFormChange('description', e.target.value)}
+                        rows={4}
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    {/* Program Features */}
+                    <div className="space-y-2">
+                      <Label htmlFor="programFeatures">Features</Label>
+                      <Textarea
+                        id="programFeatures"
+                        placeholder="List features separated by commas (Ground School, Flight Training, etc.)"
+                        value={programForm.features?.join(', ') || ''}
+                        onChange={(e) => handleProgramFormChange('features', e.target.value.split(',').map(item => item.trim()).filter(item => item))}
+                        rows={3}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setDialogOpen(false)}
+                        disabled={isSubmitting}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting
+                          ? (editingProgram ? "Saving Changes..." : "Adding Program...")
+                          : (editingProgram ? "Save Changes" : "Add Program")
+                        }
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Programs List */}
+            {loadingPrograms ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading programs...</p>
+                </div>
+              </div>
+            ) : programsList.length === 0 ? (
+              <div className="flex items-center justify-center min-h-[400px] w-full">
+                <div className="text-center space-y-6 px-4 max-w-md">
+                  <div className="flex justify-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      No programs added yet
+                    </h3>
+                    <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                      Get started by adding your first flight training program
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {programsList.map((program) => (
+                  <div key={program.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {program.name}
+                        </h3>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditProgram(program)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeleteProgram(program.id!)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+
+                    {program.images && program.images.length > 0 && (
+                      <div className="mb-4">
+                        <img
+                          src={program.images[0].medium}
+                          alt={program.name}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600 line-clamp-3">
+                        {program.description}
+                      </p>
+
+                      {program.features && program.features.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">Features:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {program.features.slice(0, 3).map((feature, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                              >
+                                {feature}
+                              </span>
+                            ))}
+                            {program.features.length > 3 && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                                +{program.features.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
       case "packages":
         return (
           <div className="space-y-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Package Management</h2>
-              <p className="text-gray-600 mb-6">Create and manage flight training packages</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button>Create New Package</Button>
-                <Button variant="outline">View All Packages</Button>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Package Management</h2>
+                <p className="text-sm text-gray-600">Create and manage flight training packages</p>
               </div>
+              <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) {
+                  setEditingPackage(null);
+                  setExistingPackageImages([]);
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                      />
+                    </svg>
+                    Add New Package
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader className="pb-6">
+                    <DialogTitle className="text-2xl">
+                      {editingPackage ? 'Edit Package' : 'Add New Package'}
+                    </DialogTitle>
+                    <DialogDescription className="text-base">
+                      {editingPackage
+                        ? 'Update the package details. All fields marked with * are required.'
+                        : 'Fill in the details for the new package. All fields marked with * are required.'
+                      }
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <form onSubmit={handlePackageSubmit} className="space-y-8">
+                    {/* Package Images */}
+                    <div className="space-y-2">
+                      <Label htmlFor="packageImages">
+                        Package Images
+                        {editingPackage && packageImagePreviews.length > 0 && (
+                          <span className="text-sm text-muted-foreground ml-2">
+                            ({packageImagePreviews.length} existing)
+                          </span>
+                        )}
+                      </Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                        <input
+                          type="file"
+                          id="packageImages"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            handlePackageFormChange('images', files);
+                            createPackageImagePreviews(files);
+                          }}
+                          className="hidden"
+                          disabled={isSubmitting}
+                        />
+                        <label htmlFor="packageImages" className="cursor-pointer">
+                          <div className="flex flex-col items-center space-y-2">
+                            <svg
+                              className="w-8 h-8 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                              />
+                            </svg>
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium text-blue-600 hover:text-blue-500">
+                                {editingPackage ? 'Add more images' : 'Click to upload'}
+                              </span> or drag and drop
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              PNG, JPG, GIF up to 10MB each
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                      {packageImagePreviews.length > 0 && (
+                        <div className="mt-4">
+                          <p className="text-sm text-gray-600 mb-2">
+                            {packageImagePreviews.length} image{packageImagePreviews.length !== 1 ? 's' : ''} {editingPackage ? 'loaded' : 'selected'}
+                          </p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {packageImagePreviews.map((previewUrl, index) => (
+                              <div
+                                key={index}
+                                className={`relative group cursor-move ${
+                                  draggedIndex === index ? 'opacity-50' : ''
+                                }`}
+                                draggable={!isSubmitting}
+                                onDragStart={(e) => handlePackageDragStart(e, index)}
+                                onDragOver={handlePackageDragOver}
+                                onDragEnd={handlePackageDragEnd}
+                                onDrop={(e) => handlePackageDrop(e, index)}
+                              >
+                                <img
+                                  src={previewUrl}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (editingPackage) {
+                                      // Remove existing image
+                                      const newExistingImages = existingPackageImages.filter((_, i) => i !== index);
+                                      const newPreviews = packageImagePreviews.filter((_, i) => i !== index);
+                                      setExistingPackageImages(newExistingImages);
+                                      setPackageImagePreviews(newPreviews);
+                                    } else {
+                                      // Remove new image
+                                      const newFiles = packageForm.images.filter((_, i) => i !== index);
+                                      const newPreviews = packageImagePreviews.filter((_, i) => i !== index);
+
+                                      handlePackageFormChange('images', newFiles);
+                                      // Clean up the removed preview URL
+                                      if (previewUrl.startsWith('blob:')) {
+                                        URL.revokeObjectURL(previewUrl);
+                                      }
+                                      setPackageImagePreviews(newPreviews);
+                                    }
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                  disabled={isSubmitting}
+                                >
+                                  ×
+                                </button>
+                                {/* Drag handle indicator */}
+                                <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                  Drag to reorder
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Package Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="packageName">Package Name *</Label>
+                      <Input
+                        id="packageName"
+                        placeholder="Starter Package"
+                        value={packageForm.name}
+                        onChange={(e) => handlePackageFormChange('name', e.target.value)}
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    {/* Package Category */}
+                    <div className="space-y-2">
+                      <Label htmlFor="packageCategory">Category</Label>
+                      <Input
+                        id="packageCategory"
+                        placeholder="Starter, Professional, Elite, etc."
+                        value={packageForm.category}
+                        onChange={(e) => handlePackageFormChange('category', e.target.value)}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    {/* Package Duration */}
+                    <div className="space-y-2">
+                      <Label htmlFor="packageDuration">Duration</Label>
+                      <Input
+                        id="packageDuration"
+                        placeholder="25 Hours, 50 Hours, etc."
+                        value={packageForm.duration}
+                        onChange={(e) => handlePackageFormChange('duration', e.target.value)}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    {/* Package Price */}
+                    <div className="space-y-2">
+                      <Label htmlFor="packagePrice">Price</Label>
+                      <Input
+                        id="packagePrice"
+                        placeholder="Starting at $1,625"
+                        value={packageForm.price}
+                        onChange={(e) => handlePackageFormChange('price', e.target.value)}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    {/* Package Description */}
+                    <div className="space-y-2">
+                      <Label htmlFor="packageDescription">Description *</Label>
+                      <Textarea
+                        id="packageDescription"
+                        placeholder="Describe the package, including what it includes..."
+                        value={packageForm.description}
+                        onChange={(e) => handlePackageFormChange('description', e.target.value)}
+                        rows={4}
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    {/* Package Features */}
+                    <div className="space-y-2">
+                      <Label htmlFor="packageFeatures">Features</Label>
+                      <Textarea
+                        id="packageFeatures"
+                        placeholder="List features separated by commas (Flight Hours, Ground School, etc.)"
+                        value={packageForm.features?.join(', ') || ''}
+                        onChange={(e) => handlePackageFormChange('features', e.target.value.split(',').map(item => item.trim()).filter(item => item))}
+                        rows={3}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setDialogOpen(false)}
+                        disabled={isSubmitting}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting
+                          ? (editingPackage ? "Saving Changes..." : "Adding Package...")
+                          : (editingPackage ? "Save Changes" : "Add Package")
+                        }
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
+
+            {/* Packages List */}
+            {loadingPackages ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading packages...</p>
+                </div>
+              </div>
+            ) : packagesList.length === 0 ? (
+              <div className="flex items-center justify-center min-h-[400px] w-full">
+                <div className="text-center space-y-6 px-4 max-w-md">
+                  <div className="flex justify-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      No packages added yet
+                    </h3>
+                    <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                      Get started by adding your first flight training package
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {packagesList.map((pkg) => (
+                  <div key={pkg.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {pkg.name}
+                        </h3>
+                        {pkg.category && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 mb-2">
+                            {pkg.category}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditPackage(pkg)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeletePackage(pkg.id!)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+
+                    {pkg.images && pkg.images.length > 0 && (
+                      <div className="mb-4">
+                        <img
+                          src={pkg.images[0].medium}
+                          alt={pkg.name}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        {pkg.duration && (
+                          <span className="text-sm text-gray-600">{pkg.duration}</span>
+                        )}
+                        {pkg.price && (
+                          <span className="text-sm font-semibold text-gray-900">{pkg.price}</span>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-gray-600 line-clamp-3">
+                        {pkg.description}
+                      </p>
+
+                      {pkg.features && pkg.features.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">Features:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {pkg.features.slice(0, 3).map((feature, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800"
+                              >
+                                {feature}
+                              </span>
+                            ))}
+                            {pkg.features.length > 3 && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                                +{pkg.features.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
 
@@ -1004,18 +2376,241 @@ export default function DashboardPage() {
           </div>
         );
 
-      case "testimonials":
+      case "reviews":
         return (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Testimonials</h2>
-              <p className="text-gray-600 mb-6">Manage customer testimonials and reviews</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button>View All Testimonials</Button>
-                <Button variant="outline">Moderate Reviews</Button>
+          <>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Review Management</h2>
+                  <p className="text-sm text-gray-600">Approve, reject, or delete customer reviews</p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={fetchReviews}
+                  disabled={loadingReviews}
+                  size="sm"
+                >
+                  {loadingReviews ? "Refreshing..." : "Refresh"}
+                </Button>
               </div>
+
+            {/* Reviews List */}
+            {loadingReviews ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading reviews...</p>
+                </div>
+              </div>
+            ) : reviewsList.length === 0 ? (
+              <div className="flex items-center justify-center min-h-[400px] w-full">
+                <div className="text-center space-y-6 px-4 max-w-md">
+                  <div className="flex justify-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      No reviews yet
+                    </h3>
+                    <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                      Customer reviews will appear here once they submit feedback
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">Avatar</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Review</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reviewsList.map((review) => (
+                      <TableRow key={review.id}>
+                        <TableCell>
+                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                            {review.avatar ? (
+                              <img src={review.avatar} alt={`${review.firstname} ${review.lastname}`} className="w-full h-full object-cover" />
+                            ) : (
+                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {review.firstname} {review.lastname}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <span
+                                key={star}
+                                className={`text-sm ${
+                                  star <= review.rating
+                                    ? "text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              >
+                                ★
+                              </span>
+                            ))}
+                            <span className="ml-1 text-xs text-gray-600">
+                              ({review.rating}/5)
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <p className="text-sm text-gray-600 truncate" title={review.testimonial}>
+                            {review.testimonial}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-600">
+                          {review.created.toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            review.isApproved
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}>
+                            {review.isApproved ? "Approved" : "Pending"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditReview(review)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleApproveReview(review.id!, !review.isApproved)}
+                              className={review.isApproved ? "text-green-600" : ""}
+                            >
+                              {review.isApproved ? "Approved" : "Approve"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDeleteReview(review.id!)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Edit Review Dialog */}
+            <Dialog open={!!editingReview} onOpenChange={(open) => !open && setEditingReview(null)}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Edit Review</DialogTitle>
+                  <DialogDescription>
+                    Update the review details below.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleUpdateReview} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="editFirstname">First Name</Label>
+                      <Input
+                        id="editFirstname"
+                        value={editReviewForm.firstname}
+                        onChange={(e) => setEditReviewForm(prev => ({ ...prev, firstname: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="editLastname">Last Name</Label>
+                      <Input
+                        id="editLastname"
+                        value={editReviewForm.lastname}
+                        onChange={(e) => setEditReviewForm(prev => ({ ...prev, lastname: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="editRating">Rating</Label>
+                    <select
+                      id="editRating"
+                      value={editReviewForm.rating}
+                      onChange={(e) => setEditReviewForm(prev => ({ ...prev, rating: parseInt(e.target.value) }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <option key={rating} value={rating}>
+                          {rating} Star{rating !== 1 ? 's' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="editTestimonial">Review</Label>
+                    <Textarea
+                      id="editTestimonial"
+                      value={editReviewForm.testimonial}
+                      onChange={(e) => setEditReviewForm(prev => ({ ...prev, testimonial: e.target.value }))}
+                      rows={4}
+                      required
+                    />
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setEditingReview(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      Update Review
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
             </div>
-          </div>
+          </>
         );
 
       case "flight-hours":

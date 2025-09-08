@@ -50,7 +50,7 @@ export const AircraftImageCarousel: React.FC<AircraftImageCarouselProps> = ({
   }
 
   return (
-    <div className={`relative h-48 overflow-hidden ${className}`}>
+    <div className={`relative overflow-hidden ${className}`}>
       <Image
         src={images[currentImageIndex]}
         alt={alt}

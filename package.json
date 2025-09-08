@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "scrape-flightschools": "node scripts/scrape-flight-schools.js",
-    "update-websites": "node scripts/update-website-urls.js"
+    "update-websites": "node scripts/update-website-urls.js",
+    "fetch-pageviews": "node scripts/fetch-pageviews.js"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

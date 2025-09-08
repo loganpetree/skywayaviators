@@ -1,19 +1,27 @@
 'use client';
 
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { incrementPageLoadCount } from "@/lib/firebase";
+import { incrementPageLoadCount, trackPageView } from "@/lib/firebase";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { Button } from "@/components/ui/button";
 import { Carousel } from "@/components/ui/apple-cards-carousel";
 import { AircraftImageCarousel } from "@/components/AircraftImageCarousel";
 import { useAircraftStore } from "@/stores/aircraftStore";
 import { Aircraft } from "@/types/aircraft";
+import { Program } from "@/types/program";
+import { Package } from "@/types/package";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function Home() {
   const router = useRouter();
   const { aircraft, loading, error, fetchAircraft, fetched } = useAircraftStore();
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [programsLoading, setProgramsLoading] = useState(true);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState(true);
 
   // Fetch aircraft data from store if not already fetched
   useEffect(() => {
@@ -30,77 +38,123 @@ export default function Home() {
     }
   }, [fetched, fetchAircraft, aircraft.length, loading, error]);
 
-  // Program cards data for carousel
-  const programCards = [
-    <div key="private-pilot" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
-      <div className="relative z-40 p-8">
-        <p className="text-left font-sans text-sm font-medium text-white md:text-base">
-          Starting at $15,000
-        </p>
-        <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
-          Private Pilot
-        </h3>
-      </div>
-      <Image
-        src="/private-pilot-card.png"
-        alt="Private Pilot Certificate"
-        fill
-        className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
-      />
-    </div>,
-    <div key="instrument-pilot" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
-      <div className="relative z-40 p-8">
-        <p className="text-left font-sans text-sm font-medium text-white md:text-base">
-          Starting at $8,000
-        </p>
-        <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
-          Instrument Pilot
-        </h3>
-      </div>
-      <Image
-        src="/ifr.png"
-        alt="Instrument Pilot Training"
-        fill
-        className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
-      />
-    </div>,
-    <div key="commercial-pilot" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
-      <div className="relative z-40 p-8">
-        <p className="text-left font-sans text-sm font-medium text-white md:text-base">
-          Starting at $35,000
-        </p>
-        <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
-          Commercial Pilot
-        </h3>
-      </div>
-      <Image
-        src="/commercial-card.png"
-        alt="Commercial Pilot Training"
-        fill
-        className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
-      />
-    </div>,
-    <div key="placeholder-program" className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
-      <div className="relative z-40 p-8">
-        <p className="text-left font-sans text-sm font-medium text-white md:text-base">
-          Starting at $5,000
-        </p>
-        <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
-          Advanced Rating
-        </h3>
-      </div>
-      <Image
-        src="/plane.png"
-        alt="Advanced Rating Training"
-        fill
-        className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
-      />
-    </div>
-  ];
+  // Fetch programs from Firebase
+  const fetchPrograms = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "programs"));
+      const programsData: Program[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        programsData.push({
+          id: doc.id,
+          ...data,
+          name: data.name || '',
+          description: data.description || '',
+          features: data.features || [],
+          images: data.images || [],
+          price: data.price || ''
+        } as Program);
+      });
+      setPrograms(programsData);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+    } finally {
+      setProgramsLoading(false);
+    }
+  };
+
+  // Fetch packages from Firebase
+  const fetchPackages = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "packages"));
+      const packagesData: Package[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        packagesData.push({
+          id: doc.id,
+          ...data,
+          name: data.name || '',
+          description: data.description || '',
+          features: data.features || [],
+          images: data.images || [],
+          price: data.price || '',
+          duration: data.duration || '',
+          category: data.category || ''
+        } as Package);
+      });
+      setPackages(packagesData);
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+    } finally {
+      setPackagesLoading(false);
+    }
+  };
+
+  // Fetch programs and packages on component mount
+  useEffect(() => {
+    fetchPrograms();
+    fetchPackages();
+  }, []);
+
+  // Generate dynamic program cards from Firebase data
+  const generateProgramCards = () => {
+    if (programsLoading || programs.length === 0) {
+      return [];
+    }
+
+    return programs.map((program, index) => {
+      // Define gradient colors for different programs
+      const gradients = [
+        "from-orange-500 to-orange-600",
+        "from-red-500 to-red-600",
+        "from-indigo-500 to-indigo-600",
+        "from-purple-500 to-purple-600",
+        "from-green-500 to-green-600",
+        "from-blue-500 to-blue-600"
+      ];
+      const gradient = gradients[index % gradients.length];
+
+      // Function to convert program name to URL slug
+      const programNameToSlug = (name: string) => {
+        return name
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+          .replace(/\s+/g, '-') // Replace spaces with hyphens
+          .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+          .trim();
+      };
+
+      return (
+        <div
+          key={program.id || index}
+          className="relative flex h-72 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[32rem] md:w-96 cursor-pointer hover:shadow-xl transition-shadow duration-300"
+          onClick={() => program.name && router.push(`/program/${programNameToSlug(program.name)}`)}
+        >
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+          <div className="relative z-40 p-8">
+            {program.price && (
+              <p className="text-left font-sans text-sm font-medium text-white md:text-base">
+                {program.price}
+              </p>
+            )}
+            <h3 className="mt-1 max-w-xs text-left font-sans text-xl font-semibold text-white md:text-3xl">
+              {program.name}
+            </h3>
+          </div>
+          {program.images && program.images.length > 0 ? (
+            <Image
+              src={program.images[0].large || program.images[0].medium || program.images[0].original}
+              alt={program.name}
+              fill
+              className="absolute inset-0 z-10 object-cover transition-transform duration-300 hover:scale-105"
+            />
+          ) : (
+            <div className={`absolute inset-0 z-10 bg-gradient-to-br ${gradient} transition-transform duration-300 hover:scale-105`} />
+          )}
+        </div>
+      );
+    });
+  };
 
   const testimonials = [
     {
@@ -127,7 +181,41 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    // Increment page load count on page load
+    // Track page view with enhanced analytics
+    const trackView = async () => {
+      try {
+        // Use the API endpoint for server-side tracking
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pagePath: '/',
+            additionalData: {
+              pageType: 'home',
+              source: 'direct'
+            }
+          })
+        });
+
+        if (response.ok) {
+          console.log('✅ Page view tracked successfully');
+        } else {
+          console.error('❌ Failed to track page view:', response.status);
+          // Fallback to client-side tracking
+          trackPageView('/', { pageType: 'home', source: 'direct' });
+        }
+      } catch (error) {
+        console.error('Error tracking page view:', error);
+        // Fallback to client-side tracking
+        trackPageView('/', { pageType: 'home', source: 'direct' });
+      }
+    };
+
+    trackView();
+
+    // Keep legacy counter for backward compatibility
     incrementPageLoadCount();
   }, []);
 
@@ -261,7 +349,20 @@ export default function Home() {
 
         {/* Carousel outside container for full-width scrolling */}
         <div className="pl-4 sm:pl-6 lg:pl-8">
-          <Carousel items={programCards} />
+          {programsLoading ? (
+            <div className="flex space-x-4">
+              {/* Loading placeholders */}
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="flex-shrink-0 h-72 w-56 md:h-[32rem] md:w-96 rounded-3xl bg-gray-200 animate-pulse"></div>
+              ))}
+            </div>
+          ) : programs.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg">No programs available at the moment.</p>
+            </div>
+          ) : (
+            <Carousel items={generateProgramCards()} />
+          )}
         </div>
 
         {/* Financing Modal */}
@@ -356,11 +457,20 @@ export default function Home() {
                   className="bg-white rounded-lg shadow-lg overflow-hidden relative cursor-pointer hover:shadow-xl transition-shadow duration-300"
                   onClick={() => router.push(`/aircraft/${plane.tailNumber}`)}
                 >
-                  <AircraftImageCarousel
-                    images={plane.images?.map((img) => img.large) || []}
-                    alt={`${plane.type} ${plane.model} ${plane.tailNumber} Aircraft`}
-                    loading={loading}
-                  />
+                  {plane.images && plane.images.length > 0 ? (
+                    <div className="relative h-48 overflow-hidden rounded-t-lg">
+                      <Image
+                        src={plane.images[0].large || plane.images[0].medium || plane.images[0].original}
+                        alt={`${plane.type} ${plane.model} ${plane.tailNumber} Aircraft`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
+                      <span className="text-gray-500 text-sm">No image available</span>
+                    </div>
+                  )}
                   {plane.equipment && plane.equipment.includes('IFR') && (
                     <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full z-20">
                       IFR Equipped
@@ -375,15 +485,11 @@ export default function Home() {
                       <span className="text-sm text-gray-500">Up to {plane.capacity} occupants</span>
                       <span className="text-sm text-gray-500">${plane.hourlyRate}/hr</span>
                     </div>
-                    <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/aircraft/${plane.tailNumber}`);
-                      }}
+                    <button
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors duration-200"
                     >
-                      Book Now
-                    </Button>
+                      See Details
+                    </button>
                   </div>
                 </div>
               ))}
@@ -392,148 +498,121 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Time Building Packages Section */}
+      {/* Time Building Programs Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-12">
             <div className="flex-1">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Time Building Packages
+                Time Building Programs
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl">
                 Accelerate your flight experience with our structured time building programs designed for aspiring professional pilots
               </p>
             </div>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white ml-8 flex-shrink-0">
-              View All Packages
+              View All Programs
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Package 1 - Starter Package */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {packagesLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Loading placeholders */}
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-10 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : packages.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg">No packages available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {packages.map((pkg, index) => {
+                // Define gradient colors for different packages
+                const gradients = [
+                  "from-orange-500 to-orange-600",
+                  "from-red-500 to-red-600",
+                  "from-indigo-500 to-indigo-600",
+                  "from-purple-500 to-purple-600"
+                ];
+                const gradient = gradients[index % gradients.length];
+
+                // Define icons for different packages
+                const icons = [
+                  <svg key="bolt" className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <h3 className="text-xl font-bold">Starter Package</h3>
-                  <p className="text-lg font-semibold">25 Hours</p>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">
-                  Perfect for building initial experience and gaining confidence in single-engine aircraft.
-                </p>
-                <div className="mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$1,625</span>
-                  <span className="text-sm text-gray-500 ml-2">($65/hr)</span>
-                </div>
-                <ul className="text-sm text-gray-600 mb-4 space-y-1">
-                  <li>• 25 flight hours</li>
-                  <li>• Cessna 150 aircraft</li>
-                  <li>• Solo flight privileges</li>
-                  <li>• Progress tracking</li>
-                </ul>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Book Package
-                </Button>
-              </div>
-            </div>
-
-            {/* Package 2 - Professional Package */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  </svg>,
+                  <svg key="check" className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <h3 className="text-xl font-bold">Professional Package</h3>
-                  <p className="text-lg font-semibold">50 Hours</p>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">
-                  Comprehensive package for serious pilots pursuing commercial certifications and advanced ratings.
-                </p>
-                <div className="mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$2,750</span>
-                  <span className="text-sm text-gray-500 ml-2">($55/hr)</span>
-                </div>
-                <ul className="text-sm text-gray-600 mb-4 space-y-1">
-                  <li>• 50 flight hours</li>
-                  <li>• Cessna 150 aircraft</li>
-                  <li>• Cross-country flights</li>
-                  <li>• Performance logbook</li>
-                </ul>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Book Package
-                </Button>
-              </div>
-            </div>
-
-            {/* Package 3 - Elite Package */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  </svg>,
+                  <svg key="star" className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                  </svg>
-                  <h3 className="text-xl font-bold">Elite Package</h3>
-                  <p className="text-lg font-semibold">100 Hours</p>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">
-                  Ultimate time building experience with premium aircraft and personalized flight planning.
-                </p>
-                <div className="mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$4,500</span>
-                  <span className="text-sm text-gray-500 ml-2">($45/hr)</span>
-                </div>
-                <ul className="text-sm text-gray-600 mb-4 space-y-1">
-                  <li>• 100 flight hours</li>
-                  <li>• Cessna 150 aircraft</li>
-                  <li>• Custom flight routes</li>
-                  <li>• Dedicated instructor</li>
-                </ul>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Book Package
-                </Button>
-              </div>
-            </div>
-
-            {/* Package 4 - Ultimate Package */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="h-48 bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  </svg>,
+                  <svg key="certificate" className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <h3 className="text-xl font-bold">Ultimate Package</h3>
-                  <p className="text-lg font-semibold">500 Hours</p>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">
-                  Maximum time building experience for professional pilots seeking extensive flight experience.
-                </p>
-                <div className="mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$21,500</span>
-                  <span className="text-sm text-gray-500 ml-2">($43/hr)</span>
-                </div>
-                <ul className="text-sm text-gray-600 mb-4 space-y-1">
-                  <li>• 500 flight hours</li>
-                  <li>• Cessna 150 aircraft</li>
-                  <li>• Advanced flight planning</li>
-                  <li>• Comprehensive logbook</li>
-                </ul>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                  Book Package
-                </Button>
-              </div>
+                ];
+                const icon = icons[index % icons.length];
+
+                return (
+                  <div key={pkg.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className={`h-48 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
+                      {pkg.images && pkg.images.length > 0 && (
+                        <Image
+                          src={pkg.images[0].medium || pkg.images[0].original}
+                          alt={pkg.name}
+                          fill
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="relative z-10 text-center text-white">
+                        {icon}
+                        <h3 className="text-xl font-bold">{pkg.name}</h3>
+                        {pkg.category && (
+                          <p className="text-sm opacity-90 mt-1">{pkg.category}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        {pkg.duration && (
+                          <span className="text-sm text-gray-600">{pkg.duration}</span>
+                        )}
+                        {pkg.price && (
+                          <span className="text-lg font-bold text-gray-900">{pkg.price}</span>
+                        )}
+                      </div>
+
+                      {pkg.features && pkg.features.length > 0 && (
+                        <ul className="text-sm text-gray-600 mb-4 space-y-1">
+                          {pkg.features.slice(0, 4).map((feature, featureIndex) => (
+                            <li key={featureIndex}>• {feature}</li>
+                          ))}
+                          {pkg.features.length > 4 && (
+                            <li className="text-gray-500">• And {pkg.features.length - 4} more features...</li>
+                          )}
+                        </ul>
+                      )}
+
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                        Book Package
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
         </div>
       </section>
 

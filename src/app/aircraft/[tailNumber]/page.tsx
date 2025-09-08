@@ -519,102 +519,111 @@ export default function AircraftDetailPage() {
                         Book This Aircraft
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Book This Aircraft</DialogTitle>
+                    <DialogContent className="sm:max-w-md w-[95vw] max-w-[400px] mx-4 p-4 sm:p-6">
+                      <DialogHeader className="space-y-2 pb-4">
+                        <DialogTitle className="text-xl font-semibold">Book This Aircraft</DialogTitle>
                       </DialogHeader>
 
                       {showSuccess ? (
-                        <div className="text-center py-8 space-y-4">
-                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <div className="text-center py-6 sm:py-8 space-y-4">
+                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <CheckCircle className="w-8 h-8 text-green-600" />
                           </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Request Submitted Successfully!</h3>
-                            <p className="text-gray-600">
+                          <div className="space-y-3">
+                            <h3 className="text-lg font-semibold text-gray-900">Request Submitted Successfully!</h3>
+                            <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                               Thank you for your interest in {aircraft?.type} {aircraft?.model}.
-                              We will contact you at <strong>{bookingForm.email}</strong> within 24 hours to discuss your request.
+                              We will contact you at <strong className="text-gray-900">{bookingForm.email}</strong> within 24 hours to discuss your request.
                             </p>
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-xs sm:text-sm text-gray-500 mt-4">
                             This dialog will close automatically in a few seconds...
                           </div>
                         </div>
                       ) : (
-                        <form onSubmit={handleBookingSubmit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleBookingSubmit} className="space-y-4 sm:space-y-5">
+                        {/* Name Fields - Stack on mobile, side-by-side on larger screens */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="firstName">First Name *</Label>
+                            <Label htmlFor="firstName" className="text-sm font-medium">First Name *</Label>
                             <Input
                               id="firstName"
                               type="text"
                               value={bookingForm.firstName}
                               onChange={(e) => setBookingForm(prev => ({ ...prev, firstName: e.target.value }))}
                               placeholder="Enter first name"
+                              className="h-11 text-base"
                               required
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="lastName">Last Name *</Label>
+                            <Label htmlFor="lastName" className="text-sm font-medium">Last Name *</Label>
                             <Input
                               id="lastName"
                               type="text"
                               value={bookingForm.lastName}
                               onChange={(e) => setBookingForm(prev => ({ ...prev, lastName: e.target.value }))}
                               placeholder="Enter last name"
+                              className="h-11 text-base"
                               required
                             />
                           </div>
                         </div>
 
+                        {/* Contact Information */}
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email Address *</Label>
+                          <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
                           <Input
                             id="email"
                             type="email"
                             value={bookingForm.email}
                             onChange={(e) => setBookingForm(prev => ({ ...prev, email: e.target.value }))}
                             placeholder="Enter your email"
+                            className="h-11 text-base"
                             required
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
                           <Input
                             id="phone"
                             type="tel"
                             value={bookingForm.phone}
                             onChange={(e) => setBookingForm(prev => ({ ...prev, phone: e.target.value }))}
                             placeholder="Enter your phone number"
+                            className="h-11 text-base"
                             required
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <Label>Interest Type *</Label>
+                        {/* Interest Type Selection */}
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">Interest Type *</Label>
                           <RadioGroup
                             value={bookingForm.interestType}
                             onValueChange={(value: 'course' | 'rental' | 'timeBuilding') =>
                               setBookingForm(prev => ({ ...prev, interestType: value }))
                             }
+                            className="space-y-2"
                           >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="course" id="course" />
-                              <Label htmlFor="course">Course Program</Label>
+                            <div className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors">
+                              <RadioGroupItem value="course" id="course" className="h-5 w-5" />
+                              <Label htmlFor="course" className="text-sm font-normal cursor-pointer flex-1">Course Program</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="rental" id="rental" />
-                              <Label htmlFor="rental">Aircraft Rental</Label>
+                            <div className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors">
+                              <RadioGroupItem value="rental" id="rental" className="h-5 w-5" />
+                              <Label htmlFor="rental" className="text-sm font-normal cursor-pointer flex-1">Aircraft Rental</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="timeBuilding" id="timeBuilding" />
-                              <Label htmlFor="timeBuilding">Time Building</Label>
+                            <div className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors">
+                              <RadioGroupItem value="timeBuilding" id="timeBuilding" className="h-5 w-5" />
+                              <Label htmlFor="timeBuilding" className="text-sm font-normal cursor-pointer flex-1">Time Building</Label>
                             </div>
                           </RadioGroup>
                         </div>
 
-                        <div className="flex items-center space-x-2">
+                        {/* Self-insured checkbox */}
+                        <div className="flex items-start space-x-3 py-2">
                           <input
                             type="checkbox"
                             id="selfInsured"
@@ -622,26 +631,37 @@ export default function AircraftDetailPage() {
                             onChange={(e) =>
                               setBookingForm(prev => ({ ...prev, selfInsured: e.target.checked }))
                             }
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5"
                           />
-                          <Label htmlFor="selfInsured">I am self-insured</Label>
+                          <Label htmlFor="selfInsured" className="text-sm font-normal cursor-pointer leading-relaxed">
+                            I am self-insured
+                          </Label>
                         </div>
 
-                        <div className="flex justify-end space-x-2 pt-4">
+                        {/* Action Buttons */}
+                        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-200">
                           <Button
                             type="button"
                             variant="outline"
                             onClick={() => setShowBookingDialog(false)}
                             disabled={isSubmitting}
+                            className="h-11 text-base font-medium"
                           >
                             Cancel
                           </Button>
                           <Button
                             type="submit"
                             disabled={isSubmitting}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-blue-600 hover:bg-blue-700 h-11 text-base font-medium"
                           >
-                            {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                            {isSubmitting ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>Submitting...</span>
+                              </div>
+                            ) : (
+                              'Submit Request'
+                            )}
                           </Button>
                         </div>
                       </form>

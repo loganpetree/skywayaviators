@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import { getFirestore, doc, increment, updateDoc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, increment, updateDoc, setDoc, addDoc, collection } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
@@ -34,7 +34,7 @@ if (typeof window !== 'undefined') {
 export { analytics };
 export default app;
 
-// Page load counter function
+// Legacy page load counter function (kept for backward compatibility)
 export const incrementPageLoadCount = async () => {
   try {
     const counterRef = doc(db, 'analytics', 'pageLoadCount');
@@ -42,7 +42,7 @@ export const incrementPageLoadCount = async () => {
       count: increment(1),
       lastUpdated: new Date()
     });
-  } catch (error) {
+  } catch {
     // If the document doesn't exist, create it
     try {
       const counterRef = doc(db, 'analytics', 'pageLoadCount');
@@ -54,5 +54,41 @@ export const incrementPageLoadCount = async () => {
     } catch (createError) {
       console.error('Error creating page load counter:', createError);
     }
+  }
+};
+
+// Enhanced page view tracking function (similar to splitflight implementation)
+export const trackPageView = async (pagePath: string, additionalData?: Record<string, unknown>) => {
+  try {
+    // Add individual page view record
+    await addDoc(collection(db, 'pageViews'), {
+      pagePath,
+      timestamp: new Date(),
+      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      viewerType: 'anonymous',
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+      referrer: typeof window !== 'undefined' ? document.referrer : null,
+      ...additionalData
+    });
+
+    // Update global page view counter
+    const counterRef = doc(db, 'analytics', 'totalPageViews');
+    try {
+      await updateDoc(counterRef, {
+        count: increment(1),
+        lastUpdated: new Date()
+      });
+    } catch (error) {
+      // If the document doesn't exist, create it
+      await setDoc(counterRef, {
+        count: 1,
+        lastUpdated: new Date(),
+        createdAt: new Date()
+      });
+    }
+
+    console.log(`📊 Page view tracked for: ${pagePath}`);
+  } catch {
+    console.error('Error tracking page view');
   }
 };

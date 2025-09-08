@@ -16,8 +16,12 @@ interface SimpleReviewFormData {
   avatar: File | null;
 }
 
+interface ReviewFormData extends Omit<Testimonial, 'id' | 'created' | 'isApproved'> {
+  avatar: File | null; // Override avatar to be File | null instead of string
+}
+
 interface ReviewFormProps {
-  onSubmit: (reviewData: Omit<Testimonial, 'id' | 'avatar' | 'created' | 'isApproved'>) => void;
+  onSubmit: (reviewData: ReviewFormData) => void;
   isSubmitting?: boolean;
 }
 
@@ -31,7 +35,6 @@ export function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps) 
   });
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   // Load saved form data on mount
@@ -137,11 +140,12 @@ export function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps) 
     }
 
     // Prepare testimonial data
-    const testimonialData: Omit<Testimonial, 'id' | 'avatar' | 'created' | 'isApproved'> = {
+    const testimonialData: ReviewFormData = {
       rating: formData.rating,
       testimonial: formData.testimonial.trim(),
       firstname: formData.firstname.trim(),
       lastname: formData.lastname.trim(),
+      avatar: formData.avatar, // Include the avatar file
     };
 
     // Clear saved draft on successful submission
@@ -181,6 +185,7 @@ export function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps) 
           rating={formData.rating}
           onRatingChange={(rating) => handleInputChange('rating', rating)}
         />
+        <p className="text-xs text-gray-500 mt-2">Click the stars to rate your experience</p>
       </div>
 
       {/* Name Fields */}
@@ -211,93 +216,51 @@ export function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps) 
         </div>
       </div>
 
-      {/* Avatar Upload - Modal */}
-      <div className="flex items-center gap-3">
-        <Dialog open={isAvatarModalOpen} onOpenChange={setIsAvatarModalOpen}>
-          <DialogTrigger asChild>
-            <div className="flex-shrink-0 cursor-pointer">
-              <div className="w-12 h-12 rounded-full border border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden hover:border-gray-400 transition-colors">
+      {/* Avatar Upload - Direct File Picker */}
+      <div>
+        <Label className="text-xs font-medium mb-2 block">Profile Picture (Optional)</Label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+          id="avatar-upload"
+        />
+        <label htmlFor="avatar-upload" className="cursor-pointer">
+          <div className="group border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="relative w-16 h-16 rounded-full border-2 border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
                 {avatarPreview ? (
-                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                  <>
+                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        removeAvatar();
+                      }}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    >
+                      ×
+                    </button>
+                  </>
                 ) : (
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 )}
               </div>
-            </div>
-          </DialogTrigger>
-
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Upload Profile Picture</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              {/* Large preview in modal */}
-              <div className="flex justify-center">
-                <div className="w-32 h-32 rounded-lg border-2 border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden">
-                  {avatarPreview ? (
-                    <img
-                      src={avatarPreview}
-                      alt="Avatar preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  )}
-                </div>
+              <div className="text-sm text-gray-600">
+                <span className="font-medium text-blue-600 hover:text-blue-500">
+                  {avatarPreview ? 'Change photo' : 'Click to add photo'}
+                </span>
               </div>
-
-              {/* Upload options */}
-              <div className="space-y-3">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    handleFileChange(e);
-                    setIsAvatarModalOpen(false);
-                  }}
-                  className="hidden"
-                  id="avatar-modal"
-                />
-
-                <div className="flex gap-2">
-                  <label
-                    htmlFor="avatar-modal"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer text-center transition-colors"
-                  >
-                    Choose File
-                  </label>
-
-                  {avatarPreview && (
-                    <button
-                      onClick={() => {
-                        removeAvatar();
-                        setIsAvatarModalOpen(false);
-                      }}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-
-                <p className="text-xs text-gray-500 text-center">
-                  Supported formats: JPEG, PNG, WebP (max 5MB)
-                </p>
+              <div className="text-xs text-gray-500">
+                PNG, JPG, GIF up to 5MB
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-
-        <div className="flex-1">
-          <span className="text-xs text-gray-600">
-            {avatarPreview ? 'Click to change photo' : 'Click to add photo (optional)'}
-          </span>
-        </div>
+          </div>
+        </label>
       </div>
 
       {/* Testimonial */}

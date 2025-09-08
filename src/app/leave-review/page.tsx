@@ -1,25 +1,58 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ReviewForm } from "@/components/ReviewForm";
 import { Testimonial } from "@/types";
+import { db, storage } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function LeaveReviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const router = useRouter();
 
-  const handleReviewSubmit = async (reviewData: Omit<Testimonial, 'id' | 'avatar' | 'created' | 'isApproved'>) => {
+  const handleReviewSubmit = async (reviewData: { rating: number; testimonial: string; firstname: string; lastname: string; avatar: File | null }) => {
     setIsSubmitting(true);
 
     try {
-      // TODO: Replace with actual API call
-      console.log("Submitting review:", reviewData);
+      let avatarUrl: string | undefined;
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Handle avatar upload if provided
+      if (reviewData.avatar) {
+        const baseName = `review_${Date.now()}_${reviewData.firstname}_${reviewData.lastname}`.replace(/[^a-zA-Z0-9]/g, '_');
+        const storageRef = ref(storage, `reviews/${baseName}.jpg`);
+
+        // Upload the File directly to Firebase Storage
+        const snapshot = await uploadBytes(storageRef, reviewData.avatar);
+        avatarUrl = await getDownloadURL(snapshot.ref);
+      }
+
+      // Create review document in Firebase
+      const reviewDoc: any = {
+        rating: reviewData.rating,
+        testimonial: reviewData.testimonial,
+        firstname: reviewData.firstname,
+        lastname: reviewData.lastname,
+        created: serverTimestamp(),
+        isApproved: false, // Reviews need admin approval before being displayed
+      };
+
+      // Only add avatar field if an avatar was uploaded
+      if (avatarUrl) {
+        reviewDoc.avatar = avatarUrl;
+      }
+
+      const docRef = await addDoc(collection(db, "reviews"), reviewDoc);
 
       // Show success message
       setIsSubmitted(true);
+
+      // Navigate to main page after 3 seconds
+      setTimeout(() => {
+        router.push('/');
+      }, 3000);
 
     } catch (error) {
       console.error("Error submitting review:", error);
@@ -41,6 +74,7 @@ export default function LeaveReviewPage() {
           </div>
           <h2 className="text-lg font-bold text-gray-900 mb-2">Thank You!</h2>
           <p className="text-gray-600 text-sm mb-4">Your review has been submitted successfully.</p>
+          <p className="text-gray-500 text-xs">Redirecting to home page in a few seconds...</p>
           <button
             onClick={() => setIsSubmitted(false)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors"

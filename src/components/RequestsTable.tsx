@@ -41,10 +41,10 @@ export function RequestsTable({ requests, onUpdateStatus }: RequestsTableProps) 
         <div className="flex flex-1 flex-col justify-center gap-1 py-2">
           <h3 className="text-lg font-semibold flex items-center space-x-2">
             <Mail className="h-5 w-5" />
-            <span>Flight Requests</span>
+            <span>Requests</span>
           </h3>
           <div className="text-sm text-muted-foreground">
-            Today&apos;s flight requests - mark as responded when contacted
+            Today&apos;s Requests
           </div>
         </div>
 

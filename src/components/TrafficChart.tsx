@@ -3,6 +3,9 @@
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { TrendingUp } from "lucide-react"
+import { collection, getDocs, query, orderBy, where } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { PageView } from "@/types/analytics"
 
 import {
   ChartConfig,
@@ -11,131 +14,440 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-interface ChartData {
-  date: string;
-  desktop: number;
-  mobile: number;
+// Helper function to format time in Central Time Zone
+const formatCentralTime = (date: Date, format: 'hour' | 'full' = 'hour'): string => {
+  // Create a date formatter for Central Time Zone
+  const centralTime = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    hour: 'numeric',
+    hour12: true,
+    ...(format === 'full' && {
+      month: 'short',
+      day: 'numeric',
+    })
+  })
+
+  const formatted = centralTime.format(date)
+  console.log('⏱️ [TrafficChart] Formatting time:', {
+    input: date.toString(),
+    inputISO: date.toISOString(),
+    timezone: 'America/Chicago',
+    format: format,
+    formatted: formatted
+  })
+
+  return formatted
 }
 
-const chartData: ChartData[] = [
-  { date: "2024-04-01", desktop: 222, mobile: 150 },
-  { date: "2024-04-02", desktop: 97, mobile: 180 },
-  { date: "2024-04-03", desktop: 167, mobile: 120 },
-  { date: "2024-04-04", desktop: 242, mobile: 260 },
-  { date: "2024-04-05", desktop: 373, mobile: 290 },
-  { date: "2024-04-06", desktop: 301, mobile: 340 },
-  { date: "2024-04-07", desktop: 245, mobile: 180 },
-  { date: "2024-04-08", desktop: 409, mobile: 320 },
-  { date: "2024-04-09", desktop: 59, mobile: 110 },
-  { date: "2024-04-10", desktop: 261, mobile: 190 },
-  { date: "2024-04-11", desktop: 327, mobile: 350 },
-  { date: "2024-04-12", desktop: 292, mobile: 210 },
-  { date: "2024-04-13", desktop: 342, mobile: 380 },
-  { date: "2024-04-14", desktop: 137, mobile: 220 },
-  { date: "2024-04-15", desktop: 120, mobile: 170 },
-  { date: "2024-04-16", desktop: 138, mobile: 190 },
-  { date: "2024-04-17", desktop: 446, mobile: 360 },
-  { date: "2024-04-18", desktop: 364, mobile: 410 },
-  { date: "2024-04-19", desktop: 243, mobile: 180 },
-  { date: "2024-04-20", desktop: 89, mobile: 150 },
-  { date: "2024-04-21", desktop: 137, mobile: 200 },
-  { date: "2024-04-22", desktop: 224, mobile: 170 },
-  { date: "2024-04-23", desktop: 138, mobile: 230 },
-  { date: "2024-04-24", desktop: 387, mobile: 290 },
-  { date: "2024-04-25", desktop: 215, mobile: 250 },
-  { date: "2024-04-26", desktop: 75, mobile: 130 },
-  { date: "2024-04-27", desktop: 383, mobile: 420 },
-  { date: "2024-04-28", desktop: 122, mobile: 180 },
-  { date: "2024-04-29", desktop: 315, mobile: 240 },
-  { date: "2024-04-30", desktop: 454, mobile: 380 },
-  { date: "2024-05-01", desktop: 165, mobile: 220 },
-  { date: "2024-05-02", desktop: 293, mobile: 310 },
-  { date: "2024-05-03", desktop: 247, mobile: 190 },
-  { date: "2024-05-04", desktop: 385, mobile: 420 },
-  { date: "2024-05-05", desktop: 481, mobile: 390 },
-  { date: "2024-05-06", desktop: 498, mobile: 520 },
-  { date: "2024-05-07", desktop: 388, mobile: 300 },
-  { date: "2024-05-08", desktop: 149, mobile: 210 },
-  { date: "2024-05-09", desktop: 227, mobile: 180 },
-  { date: "2024-05-10", desktop: 293, mobile: 330 },
-  { date: "2024-05-11", desktop: 335, mobile: 270 },
-  { date: "2024-05-12", desktop: 197, mobile: 240 },
-  { date: "2024-05-13", desktop: 197, mobile: 160 },
-  { date: "2024-05-14", desktop: 448, mobile: 490 },
-  { date: "2024-05-15", desktop: 473, mobile: 380 },
-  { date: "2024-05-16", desktop: 338, mobile: 400 },
-  { date: "2024-05-17", desktop: 499, mobile: 420 },
-  { date: "2024-05-18", desktop: 315, mobile: 350 },
-  { date: "2024-05-19", desktop: 235, mobile: 180 },
-  { date: "2024-05-20", desktop: 177, mobile: 230 },
-  { date: "2024-05-21", desktop: 82, mobile: 140 },
-  { date: "2024-05-22", desktop: 81, mobile: 120 },
-  { date: "2024-05-23", desktop: 252, mobile: 290 },
-  { date: "2024-05-24", desktop: 294, mobile: 220 },
-  { date: "2024-05-25", desktop: 201, mobile: 250 },
-  { date: "2024-05-26", desktop: 213, mobile: 170 },
-  { date: "2024-05-27", desktop: 420, mobile: 460 },
-  { date: "2024-05-28", desktop: 233, mobile: 190 },
-  { date: "2024-05-29", desktop: 78, mobile: 130 },
-  { date: "2024-05-30", desktop: 340, mobile: 280 },
-  { date: "2024-05-31", desktop: 178, mobile: 230 },
-  { date: "2024-06-01", desktop: 178, mobile: 200 },
-  { date: "2024-06-02", desktop: 470, mobile: 410 },
-  { date: "2024-06-03", desktop: 103, mobile: 160 },
-  { date: "2024-06-04", desktop: 439, mobile: 380 },
-  { date: "2024-06-05", desktop: 88, mobile: 140 },
-  { date: "2024-06-06", desktop: 294, mobile: 250 },
-  { date: "2024-06-07", desktop: 323, mobile: 370 },
-  { date: "2024-06-08", desktop: 385, mobile: 320 },
-  { date: "2024-06-09", desktop: 438, mobile: 480 },
-  { date: "2024-06-10", desktop: 155, mobile: 200 },
-  { date: "2024-06-11", desktop: 92, mobile: 150 },
-  { date: "2024-06-12", desktop: 492, mobile: 420 },
-  { date: "2024-06-13", desktop: 81, mobile: 130 },
-  { date: "2024-06-14", desktop: 426, mobile: 380 },
-  { date: "2024-06-15", desktop: 307, mobile: 350 },
-  { date: "2024-06-16", desktop: 371, mobile: 310 },
-  { date: "2024-06-17", desktop: 475, mobile: 520 },
-  { date: "2024-06-18", desktop: 107, mobile: 170 },
-  { date: "2024-06-19", desktop: 341, mobile: 290 },
-  { date: "2024-06-20", desktop: 408, mobile: 450 },
-  { date: "2024-06-21", desktop: 169, mobile: 210 },
-  { date: "2024-06-22", desktop: 317, mobile: 270 },
-  { date: "2024-06-23", desktop: 480, mobile: 530 },
-  { date: "2024-06-24", desktop: 132, mobile: 180 },
-  { date: "2024-06-25", desktop: 141, mobile: 190 },
-  { date: "2024-06-26", desktop: 434, mobile: 380 },
-  { date: "2024-06-27", desktop: 448, mobile: 490 },
-  { date: "2024-06-28", desktop: 149, mobile: 200 },
-  { date: "2024-06-29", desktop: 103, mobile: 160 },
-  { date: "2024-06-30", desktop: 446, mobile: 400 },
-]
+// LiveIndicator component
+const LiveIndicator = React.memo(({ size = "sm" }: { size?: "sm" | "md" }) => {
+  return (
+    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium ${
+      size === "sm" ? "px-2 py-0.5 text-xs" : "px-2 py-1 text-sm"
+    }`}>
+      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+      <span>Live</span>
+    </div>
+  )
+})
+
+LiveIndicator.displayName = "LiveIndicator"
+
+interface ChartData {
+  date: string;
+  views: number;
+  requests: number;
+}
+
+// Function to fetch page view data from Firebase
+const fetchPageViewData = async (): Promise<{ chartData: ChartData[], pageViews: PageView[] }> => {
+  try {
+    // Get all page views from the last 90 days
+    const ninetyDaysAgo = new Date()
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+
+    console.log('🔍 [TrafficChart] Fetching page views...')
+    console.log('📅 [TrafficChart] Current time:', new Date().toString())
+    console.log('🌍 [TrafficChart] Browser local time:', new Date().toLocaleString())
+    console.log('⏰ [TrafficChart] UTC timestamp:', Date.now())
+    console.log('📆 [TrafficChart] Ninety days ago cutoff:', ninetyDaysAgo.toISOString())
+
+    const pageViewsQuery = query(
+      collection(db, 'pageViews'),
+      where('timestamp', '>=', ninetyDaysAgo),
+      orderBy('timestamp', 'asc')
+    )
+
+    const querySnapshot = await getDocs(pageViewsQuery)
+    const pageViews: PageView[] = []
+
+    console.log('📊 [TrafficChart] Found', querySnapshot.size, 'page view documents')
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      const pageView = {
+        pagePath: data.pagePath,
+        timestamp: data.timestamp?.toDate() || new Date(data.timestamp),
+        date: data.date,
+        viewerType: data.viewerType,
+        userAgent: data.userAgent,
+        referrer: data.referrer,
+        ip: data.ip,
+        ...data
+      }
+      pageViews.push(pageView)
+
+      console.log('📄 [TrafficChart] Page view:', {
+        id: doc.id,
+        pagePath: pageView.pagePath,
+        timestamp: pageView.timestamp.toString(),
+        date: pageView.date,
+        viewerType: pageView.viewerType
+      })
+    })
+
+    // Group by date for daily views (for non-1d ranges)
+    const dateMap = new Map<string, number>()
+
+    pageViews.forEach((view) => {
+      const date = view.date
+      dateMap.set(date, (dateMap.get(date) || 0) + 1)
+    })
+
+    // Convert to chart data format
+    const chartData: ChartData[] = []
+    const sortedDates = Array.from(dateMap.keys()).sort()
+
+    sortedDates.forEach((date) => {
+      const views = dateMap.get(date) || 0
+      chartData.push({
+        date,
+        views,
+        requests: 0 // For now, we'll set requests to 0 since we don't have request data
+      })
+    })
+
+    const result = chartData.length > 0 ? chartData : [
+      { date: "2024-01-01", views: 0, requests: 0 }
+    ]
+
+    return { chartData: result, pageViews }
+  } catch (error) {
+    console.error('Error fetching page view data:', error)
+    return {
+      chartData: [{ date: "2024-01-01", views: 0, requests: 0 }],
+      pageViews: []
+    }
+  }
+}
+
+// Function to get hourly data for 1d view with realistic traffic patterns
+const getHourlyData = (allPageViews: PageView[]): ChartData[] => {
+  const today = new Date()
+  const todayString = today.toISOString().split('T')[0]
+
+  console.log('📊 [TrafficChart] Generating hourly data for 1d view')
+  console.log('📅 [TrafficChart] Today date:', today.toString())
+  console.log('📅 [TrafficChart] Today ISO string:', today.toISOString())
+  console.log('📅 [TrafficChart] Today date string (YYYY-MM-DD):', todayString)
+  console.log('📊 [TrafficChart] All page views for processing:', allPageViews.length, 'records')
+
+  // Filter page views for today only
+  const todayPageViews = allPageViews.filter(view => {
+    try {
+      // Handle Firestore Timestamp objects
+      let timestamp: Date
+      if (view.timestamp && typeof view.timestamp.toDate === 'function') {
+        // Firestore Timestamp
+        timestamp = view.timestamp.toDate()
+      } else if (view.timestamp instanceof Date) {
+        // Regular Date object
+        timestamp = view.timestamp
+      } else {
+        // Fallback for other timestamp formats
+        timestamp = new Date(view.timestamp)
+      }
+
+      const viewDate = timestamp.toISOString().split('T')[0]
+      return viewDate === todayString
+    } catch (error) {
+      console.warn('⚠️ [TrafficChart] Invalid timestamp for view:', view, error)
+      return false
+    }
+  })
+
+  console.log('🎯 [TrafficChart] Today page views found:', todayPageViews.length)
+
+  // Group views by hour
+  const hourlyViews = new Map<number, number>()
+
+  // Initialize all hours to 0
+  for (let hour = 0; hour < 24; hour++) {
+    hourlyViews.set(hour, 0)
+  }
+
+  // Count actual views per hour
+  todayPageViews.forEach(view => {
+    try {
+      // Handle Firestore Timestamp objects
+      let timestamp: Date
+      if (view.timestamp && typeof view.timestamp.toDate === 'function') {
+        // Firestore Timestamp
+        timestamp = view.timestamp.toDate()
+      } else if (view.timestamp instanceof Date) {
+        // Regular Date object
+        timestamp = view.timestamp
+      } else {
+        // Fallback for other timestamp formats
+        timestamp = new Date(view.timestamp)
+      }
+
+      const hour = timestamp.getHours()
+      const currentCount = hourlyViews.get(hour) || 0
+      hourlyViews.set(hour, currentCount + 1)
+
+      console.log(`📄 [TrafficChart] View at ${timestamp.toLocaleString()} -> Hour ${hour}`)
+    } catch (error) {
+      console.warn('⚠️ [TrafficChart] Error processing view timestamp:', view, error)
+    }
+  })
+
+  // Create hourly data array
+  const hourlyData: ChartData[] = []
+
+  for (let hour = 0; hour < 24; hour++) {
+    const hourDate = new Date(today)
+    hourDate.setHours(hour, 0, 0, 0)
+
+    const hourViews = hourlyViews.get(hour) || 0
+
+    hourlyData.push({
+      date: hourDate.toISOString(),
+      views: hourViews,
+      requests: 0
+    })
+
+    console.log(`🕐 [TrafficChart] Hour ${hour} (${hourDate.toLocaleString()}): ${hourViews} views`)
+  }
+
+  console.log('✅ [TrafficChart] Final hourly data:', hourlyData)
+  return hourlyData
+}
+
+// Mock data function for fallback
+const getMockData = (): ChartData[] => {
+  return [
+    { date: "2024-01-01", views: 100, requests: 10 },
+    { date: "2024-01-02", views: 120, requests: 15 },
+    { date: "2024-01-03", views: 90, requests: 8 },
+  ]
+}
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  views: {
+    label: "Site Views",
     color: "var(--chart-1)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--chart-2)",
   },
 } satisfies ChartConfig
 
 export function TrafficChart() {
   const [activeChart, setActiveChart] =
-    React.useState<keyof typeof chartConfig>("desktop")
+    React.useState<keyof typeof chartConfig>("views")
   const [selectedDateRange, setSelectedDateRange] = React.useState("30d")
+  const [chartData, setChartData] = React.useState<ChartData[]>([])
+  const [allPageViews, setAllPageViews] = React.useState<PageView[]>([])
 
-  // Filter data based on selected date range
+  React.useEffect(() => {
+    const loadData = async () => {
+      console.log('🚀 [TrafficChart] Component mounted, loading data...')
+      try {
+        const { chartData: data, pageViews } = await fetchPageViewData()
+        console.log('✅ [TrafficChart] Data loaded successfully:', data.length, 'data points')
+        console.log('✅ [TrafficChart] Page views loaded:', pageViews.length, 'records')
+        setChartData(data)
+        setAllPageViews(pageViews)
+      } catch (error) {
+        console.error('❌ [TrafficChart] Error loading chart data:', error)
+        // Fallback to mock data if Firebase fails
+        const mockData = getMockData()
+        console.log('🔄 [TrafficChart] Using fallback mock data:', mockData)
+        setChartData(mockData)
+        setAllPageViews([])
+      }
+    }
+
+    loadData()
+  }, [])
+
+  // Track date range changes
+  React.useEffect(() => {
+    console.log('🔄 [TrafficChart] Date range changed to:', selectedDateRange)
+  }, [selectedDateRange])
+
+  // Filter data based on selected date range with granular data points
   const getFilteredData = () => {
     const now = new Date()
     const ranges = {
+      '1d': 1,
       '7d': 7,
       '30d': 30,
       '90d': 90,
       '6m': 180,
       '1y': 365
+    }
+
+    console.log('🔄 [TrafficChart] Filtering data for range:', selectedDateRange)
+    console.log('📅 [TrafficChart] Current time (now):', now.toString())
+    console.log('📊 [TrafficChart] Chart data available:', chartData.length, 'items')
+    console.log('📊 [TrafficChart] All page views available:', allPageViews.length, 'records')
+
+    if (selectedDateRange === '1d') {
+      console.log('📊 [TrafficChart] Using 1d view - calling getHourlyData with page views')
+      // For 1d, show hourly breakdown of today's data using actual page view timestamps
+      const hourlyData = getHourlyData(allPageViews)
+      console.log('📊 [TrafficChart] 1d view result:', hourlyData.length, 'hours of data')
+      return hourlyData
+    }
+
+    if (selectedDateRange === '7d') {
+      // Generate all 7 days for the past week
+      const weekData: ChartData[] = []
+
+      for (let dayOffset = 6; dayOffset >= 0; dayOffset--) {
+        const dayDate = new Date(now)
+        dayDate.setDate(now.getDate() - dayOffset)
+        dayDate.setHours(0, 0, 0, 0)
+
+        // Use YYYY-MM-DD format to match processed data
+        const dayKey = dayDate.toISOString().split('T')[0]
+
+        // Find existing data for this day - direct string match
+        const existingData = chartData.find(item => item.date === dayKey)
+
+        weekData.push({
+          date: dayDate.toISOString(), // Keep full ISO for chart display
+          views: existingData?.views || 0,
+          requests: existingData?.requests || 0
+        })
+      }
+
+      return weekData
+    }
+
+    if (selectedDateRange === '30d') {
+      // Generate all 30 days for the past month
+      const monthData: ChartData[] = []
+
+      for (let dayOffset = 29; dayOffset >= 0; dayOffset--) {
+        const dayDate = new Date(now)
+        dayDate.setDate(now.getDate() - dayOffset)
+        dayDate.setHours(0, 0, 0, 0)
+
+        // Use YYYY-MM-DD format to match processed data
+        const dayKey = dayDate.toISOString().split('T')[0]
+
+        // Find existing data for this day - direct string match
+        const existingData = chartData.find(item => item.date === dayKey)
+
+        monthData.push({
+          date: dayDate.toISOString(), // Keep full ISO for chart display
+          views: existingData?.views || 0,
+          requests: existingData?.requests || 0
+        })
+      }
+
+      return monthData
+    }
+
+    if (selectedDateRange === '90d') {
+      // Generate all 90 days for the past 3 months
+      const quarterData: ChartData[] = []
+
+      for (let dayOffset = 89; dayOffset >= 0; dayOffset--) {
+        const dayDate = new Date(now)
+        dayDate.setDate(now.getDate() - dayOffset)
+        dayDate.setHours(0, 0, 0, 0)
+
+        // Use YYYY-MM-DD format to match processed data
+        const dayKey = dayDate.toISOString().split('T')[0]
+
+        // Find existing data for this day - direct string match
+        const existingData = chartData.find(item => item.date === dayKey)
+
+        quarterData.push({
+          date: dayDate.toISOString(), // Keep full ISO for chart display
+          views: existingData?.views || 0,
+          requests: existingData?.requests || 0
+        })
+      }
+
+      return quarterData
+    }
+
+    if (selectedDateRange === '6m') {
+      // Generate all 6 months for the past 6 months
+      const sixMonthData: ChartData[] = []
+
+      for (let monthOffset = 5; monthOffset >= 0; monthOffset--) {
+        const monthDate = new Date(now)
+        monthDate.setMonth(now.getMonth() - monthOffset)
+        monthDate.setDate(1) // First day of the month
+        monthDate.setHours(0, 0, 0, 0)
+
+        // Aggregate existing data for this month
+        const monthlyViews = chartData.filter(item => {
+          const itemDate = new Date(item.date)
+          return itemDate.getMonth() === monthDate.getMonth() &&
+                 itemDate.getFullYear() === monthDate.getFullYear()
+        }).reduce((sum, item) => sum + item.views, 0)
+
+        const monthlyRequests = chartData.filter(item => {
+          const itemDate = new Date(item.date)
+          return itemDate.getMonth() === monthDate.getMonth() &&
+                 itemDate.getFullYear() === monthDate.getFullYear()
+        }).reduce((sum, item) => sum + item.requests, 0)
+
+        sixMonthData.push({
+          date: monthDate.toISOString(),
+          views: monthlyViews,
+          requests: monthlyRequests
+        })
+      }
+
+      return sixMonthData
+    }
+
+    if (selectedDateRange === '1y') {
+      // Generate all 12 months for the past year
+      const yearData: ChartData[] = []
+
+      for (let monthOffset = 11; monthOffset >= 0; monthOffset--) {
+        const monthDate = new Date(now)
+        monthDate.setMonth(now.getMonth() - monthOffset)
+        monthDate.setDate(1) // First day of the month
+        monthDate.setHours(0, 0, 0, 0)
+
+        // Aggregate existing data for this month
+        const monthlyViews = chartData.filter(item => {
+          const itemDate = new Date(item.date)
+          return itemDate.getMonth() === monthDate.getMonth() &&
+                 itemDate.getFullYear() === monthDate.getFullYear()
+        }).reduce((sum, item) => sum + item.views, 0)
+
+        const monthlyRequests = chartData.filter(item => {
+          const itemDate = new Date(item.date)
+          return itemDate.getMonth() === monthDate.getMonth() &&
+                 itemDate.getFullYear() === monthDate.getFullYear()
+        }).reduce((sum, item) => sum + item.requests, 0)
+
+        yearData.push({
+          date: monthDate.toISOString(),
+          views: monthlyViews,
+          requests: monthlyRequests
+        })
+      }
+
+      return yearData
     }
 
     const daysToShow = ranges[selectedDateRange as keyof typeof ranges] || 30
@@ -147,12 +459,21 @@ export function TrafficChart() {
     }).slice(-50) // Limit to last 50 points for performance
   }
 
-  const filteredChartData = getFilteredData()
+  // Use useMemo for proper dependency tracking and performance
+  const filteredChartData = React.useMemo(() => {
+    const data = getFilteredData()
+    console.log('📊 [TrafficChart] Filtered chart data for display:', {
+      range: selectedDateRange,
+      dataPoints: data.length,
+      totalViews: data.reduce((acc, curr) => acc + curr.views, 0),
+      sampleData: data.slice(0, 3) // Show first 3 data points
+    })
+    return data
+  }, [selectedDateRange, chartData, allPageViews])
 
   const total = React.useMemo(
     () => ({
-      desktop: filteredChartData.reduce((acc, curr) => acc + curr.desktop, 0),
-      mobile: filteredChartData.reduce((acc, curr) => acc + curr.mobile, 0),
+      views: filteredChartData.reduce((acc, curr) => acc + curr.views, 0),
     }),
     [filteredChartData]
   )
@@ -164,15 +485,16 @@ export function TrafficChart() {
         <div className="flex flex-1 flex-col justify-center gap-1 py-2">
           <h3 className="text-lg font-semibold flex items-center space-x-2">
             <TrendingUp className="h-5 w-5" />
-            <span>Traffic Overview</span>
+            <span>Site Traffic</span>
+            <LiveIndicator size="sm" />
           </h3>
           <div className="text-sm text-muted-foreground">
-            Showing visitor traffic for the selected time period
+            Showing site traffic for the selected time period (CST/CDT)
           </div>
 
           {/* Date Range Filter */}
           <div className="flex items-center space-x-2 mt-3">
-            {["7d", "30d", "90d", "6m", "1y"].map((range) => (
+            {["1d", "7d", "30d", "90d", "6m", "1y"].map((range) => (
               <button
                 key={range}
                 onClick={() => setSelectedDateRange(range)}
@@ -190,7 +512,7 @@ export function TrafficChart() {
 
         {/* Metric Tabs */}
         <div className="flex gap-6 mt-4 sm:mt-0 sm:items-end">
-          {["desktop", "mobile"].map((key) => {
+          {["views"].map((key) => {
             const chart = key as keyof typeof chartConfig
             return (
               <button
@@ -233,7 +555,7 @@ export function TrafficChart() {
                   No data available
                 </h3>
                 <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed font-medium">
-                  No traffic data recorded for the selected time period
+                  No {chartConfig[activeChart].label.toLowerCase()} recorded for the selected time period
                 </p>
               </div>
 
@@ -282,6 +604,8 @@ export function TrafficChart() {
                     const date = new Date(value)
 
                     switch (selectedDateRange) {
+                      case "1d":
+                        return formatCentralTime(date, 'hour')
                       case "7d":
                         return date.toLocaleDateString("en-US", {
                           weekday: "short",
@@ -330,12 +654,7 @@ export function TrafficChart() {
                       labelFormatter={(value) => {
                         const date = new Date(value)
                         if (selectedDateRange === "1d") {
-                          return date.toLocaleString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "numeric",
-                            hour12: true,
-                          })
+                          return formatCentralTime(date, 'full')
                         }
                         return date.toLocaleDateString("en-US", {
                           month: "short",
