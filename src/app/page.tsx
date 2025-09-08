@@ -7,7 +7,6 @@ import { incrementPageLoadCount, trackPageView } from "@/lib/firebase";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { Button } from "@/components/ui/button";
 import { Carousel } from "@/components/ui/apple-cards-carousel";
-import { AircraftImageCarousel } from "@/components/AircraftImageCarousel";
 import { useAircraftStore } from "@/stores/aircraftStore";
 import { Aircraft } from "@/types/aircraft";
 import { Program } from "@/types/program";

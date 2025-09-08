@@ -34,7 +34,7 @@ export default function AircraftDetailPage() {
   const [showSuccess, setShowSuccess] = useState(false)
 
   const {
-    aircraft: storeAircraft,
+    // aircraft: storeAircraft,
     loading: storeLoading,
     fetchAircraft,
     getAircraftByTailNumber,

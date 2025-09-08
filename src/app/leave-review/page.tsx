@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ReviewForm } from "@/components/ReviewForm";
-import { Testimonial } from "@/types";
 import { db, storage } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -30,7 +29,14 @@ export default function LeaveReviewPage() {
       }
 
       // Create review document in Firebase
-      const reviewDoc: any = {
+      const reviewDoc: {
+        rating: number;
+        testimonial: string;
+        firstname: string;
+        lastname: string;
+        created: unknown;
+        isApproved: boolean;
+      } = {
         rating: reviewData.rating,
         testimonial: reviewData.testimonial,
         firstname: reviewData.firstname,
@@ -44,7 +50,8 @@ export default function LeaveReviewPage() {
         reviewDoc.avatar = avatarUrl;
       }
 
-      const docRef = await addDoc(collection(db, "reviews"), reviewDoc);
+      // const docRef = await addDoc(collection(db, "reviews"), reviewDoc);
+      await addDoc(collection(db, "reviews"), reviewDoc);
 
       // Show success message
       setIsSubmitted(true);

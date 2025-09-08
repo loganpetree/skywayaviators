@@ -57,7 +57,7 @@ export function RequestDialog({ children, programName, interestType = 'course' }
 
       await addDoc(collection(db, "requests"), requestData);
 
-      setSubmitMessage("Thank you! Your request has been submitted. We'll contact you soon.");
+      setSubmitMessage("Thank you! Your request has been submitted. We&apos;ll contact you soon.");
 
       // Reset form
       setFirstName("");
@@ -90,7 +90,7 @@ export function RequestDialog({ children, programName, interestType = 'course' }
         <DialogHeader>
           <DialogTitle>Contact for Details</DialogTitle>
           <DialogDescription>
-            Fill out the form below and we'll get back to you with detailed information about {programName || "our programs"}.
+            Fill out the form below and we&apos;ll get back to you with detailed information about {programName || "our programs"}.
           </DialogDescription>
         </DialogHeader>
 
@@ -151,7 +151,7 @@ export function RequestDialog({ children, programName, interestType = 'course' }
 
           {/* Interest Type */}
           <div className="space-y-2">
-            <Label>I'm interested in:</Label>
+            <Label>I&apos;m interested in:</Label>
             <RadioGroup value={selectedInterestType} onValueChange={(value) => setSelectedInterestType(value as 'course' | 'rental' | 'timeBuilding')}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="course" id="course" />

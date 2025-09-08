@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
 import { Program } from "@/types/program";
@@ -39,7 +39,7 @@ export default function ProgramDetail() {
     const fetchProgram = async () => {
       try {
         // Convert slug back to program name for searching
-        const programName = slugToProgramName(programSlug);
+        // const programName = slugToProgramName(programSlug);
 
         // Query all programs and find the one with matching name
         const querySnapshot = await getDocs(collection(db, "programs"));

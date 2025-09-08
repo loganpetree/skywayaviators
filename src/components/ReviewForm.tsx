@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Testimonial } from "@/types";
 
 interface SimpleReviewFormData {
@@ -35,7 +35,7 @@ export function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps) 
   });
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  // const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   // Load saved form data on mount
   React.useEffect(() => {
