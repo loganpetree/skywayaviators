@@ -794,7 +794,7 @@ export default function DashboardPage() {
 
   const handleUpdateReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingReview) return;
+    if (!editingReview || !editingReview.id) return;
 
     try {
       await updateDoc(doc(db, "reviews", editingReview.id), {
@@ -923,7 +923,7 @@ export default function DashboardPage() {
         packageData.images = uploadedImageData;
       }
 
-      if (editingPackage) {
+      if (editingPackage && editingPackage.id) {
         // Update existing package
         await updateDoc(doc(db, "packages", editingPackage.id), {
           ...packageData,
@@ -1142,7 +1142,7 @@ export default function DashboardPage() {
       }
 
       // Save to Firestore
-      if (editingAircraft) {
+      if (editingAircraft && editingAircraft.id) {
         // Update existing aircraft
         await updateDoc(doc(db, "aircraft", editingAircraft.id), {
           ...aircraftData,
