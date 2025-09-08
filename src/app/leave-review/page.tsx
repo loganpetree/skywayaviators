@@ -36,6 +36,7 @@ export default function LeaveReviewPage() {
         lastname: string;
         created: unknown;
         isApproved: boolean;
+        avatar?: string;
       } = {
         rating: reviewData.rating,
         testimonial: reviewData.testimonial,

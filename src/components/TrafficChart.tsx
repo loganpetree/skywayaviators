@@ -87,7 +87,7 @@ const fetchPageViewData = async (): Promise<{ chartData: ChartData[], pageViews:
       const data = doc.data()
       const pageView = {
         pagePath: data.pagePath,
-        timestamp: data.timestamp?.toDate() || new Date(data.timestamp),
+        timestamp: data.timestamp instanceof Date ? data.timestamp : new Date(data.timestamp),
         date: data.date,
         viewerType: data.viewerType,
         userAgent: data.userAgent,
@@ -155,13 +155,9 @@ const getHourlyData = (allPageViews: PageView[]): ChartData[] => {
   // Filter page views for today only
   const todayPageViews = allPageViews.filter(view => {
     try {
-      // Handle Firestore Timestamp objects
+      // Handle timestamp - should be Date object according to PageView interface
       let timestamp: Date
-      if (view.timestamp && typeof view.timestamp.toDate === 'function') {
-        // Firestore Timestamp
-        timestamp = view.timestamp.toDate()
-      } else if (view.timestamp instanceof Date) {
-        // Regular Date object
+      if (view.timestamp instanceof Date) {
         timestamp = view.timestamp
       } else {
         // Fallback for other timestamp formats
@@ -189,13 +185,9 @@ const getHourlyData = (allPageViews: PageView[]): ChartData[] => {
   // Count actual views per hour
   todayPageViews.forEach(view => {
     try {
-      // Handle Firestore Timestamp objects
+      // Handle timestamp - should be Date object according to PageView interface
       let timestamp: Date
-      if (view.timestamp && typeof view.timestamp.toDate === 'function') {
-        // Firestore Timestamp
-        timestamp = view.timestamp.toDate()
-      } else if (view.timestamp instanceof Date) {
-        // Regular Date object
+      if (view.timestamp instanceof Date) {
         timestamp = view.timestamp
       } else {
         // Fallback for other timestamp formats
