@@ -656,7 +656,7 @@ export default function DashboardPage() {
         programData.images = uploadedImageData;
       }
 
-      if (editingProgram) {
+      if (editingProgram && editingProgram.id) {
         // Update existing program
         await updateDoc(doc(db, "programs", editingProgram.id), {
           ...programData,
