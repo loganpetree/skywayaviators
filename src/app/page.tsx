@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { incrementPageLoadCount, trackPageView } from "@/lib/firebase";
 import { useAircraftStore } from "@/stores/aircraftStore";
 import { Program } from "@/types/program";
@@ -16,6 +15,7 @@ import {
   TestimonialsSection,
   Footer
 } from "@/components/home";
+import ScrollToSection from "@/components/ScrollToSection";
 
 export default function Home() {
   const { aircraft, loading, error, fetchAircraft, fetched } = useAircraftStore();
@@ -23,7 +23,6 @@ export default function Home() {
   const [programsLoading, setProgramsLoading] = useState(true);
   const [packages, setPackages] = useState<Package[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
-  const searchParams = useSearchParams();
 
   // Fetch aircraft data from store if not already fetched
   useEffect(() => {
@@ -107,28 +106,11 @@ export default function Home() {
     incrementPageLoadCount();
   }, []);
 
-  // Handle scrolling to sections when navigating from header
-  useEffect(() => {
-    // Check if there's a hash in the URL (e.g., #programs, #fleet, etc.)
-    const hash = window.location.hash.slice(1); // Remove the '#' character
-    if (hash) {
-      // Small delay to ensure sections are rendered
-      const timer = setTimeout(() => {
-        const element = document.getElementById(hash);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, [searchParams, programsLoading, packagesLoading]); // Re-run when data loads
-
-
 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-transparent">
+      <ScrollToSection />
       <HeroSection />
 
       <ProgramsSection
