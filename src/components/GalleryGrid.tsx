@@ -1,7 +1,7 @@
 import { Camera, Grid3X3, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface GalleryImage {
   src: string;
@@ -34,6 +34,12 @@ const GalleryGrid = ({ galleryImages, instructor, handleShowAllPhotos, loading =
     currentIndex: number;
   } | null>(null);
 
+  // Mobile carousel state
+  const [mobileCurrentIndex, setMobileCurrentIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
   const handleImageClick = (imageIndex: number) => {
     if (aircraftImages && aircraftImages.length > 0) {
       setFullScreenImage({
@@ -63,6 +69,53 @@ const GalleryGrid = ({ galleryImages, instructor, handleShowAllPhotos, loading =
 
   const handleCloseFullScreen = () => {
     setFullScreenImage(null);
+  };
+
+  // Mobile carousel functions
+  const handleMobilePrev = () => {
+    setMobileCurrentIndex(prev =>
+      prev > 0 ? prev - 1 : aircraftImages.length - 1
+    );
+  };
+
+  const handleMobileNext = () => {
+    setMobileCurrentIndex(prev =>
+      prev < aircraftImages.length - 1 ? prev + 1 : 0
+    );
+  };
+
+  const handleMobileImageClick = (index: number) => {
+    if (aircraftImages && aircraftImages.length > 0) {
+      setFullScreenImage({
+        images: aircraftImages,
+        currentIndex: index
+      });
+    }
+  };
+
+  // Touch handlers for swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && mobileCurrentIndex < aircraftImages.length - 1) {
+      handleMobileNext();
+    }
+    if (isRightSwipe && mobileCurrentIndex > 0) {
+      handleMobilePrev();
+    }
   };
 
 
@@ -102,54 +155,107 @@ const GalleryGrid = ({ galleryImages, instructor, handleShowAllPhotos, loading =
   }, [fullScreenImage]);
   return (
     <div id="media" className="relative">
-      {/* Mobile: Single image */}
-      <div className="lg:hidden px-4 py-6">
-        <div className="relative h-80 sm:h-96 max-w-sm mx-auto">
+      {/* Mobile: Full-width carousel */}
+      <div className="lg:hidden relative">
+        <div className="relative w-full h-80 sm:h-96 overflow-hidden rounded-2xl">
           {loading ? (
             // Loading placeholder
-            <div className="w-full h-full bg-gray-200 rounded-2xl animate-pulse flex items-center justify-center">
+            <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
               <div className="text-center text-gray-400">
                 <Camera className="w-8 h-8 mx-auto mb-2" />
                 <p className="text-sm">Loading...</p>
               </div>
             </div>
-          ) : galleryImages[0] ? (
-            galleryImages[0].isPlaceholder ? (
-              <Image
-                src={galleryImages[0].src}
-                alt={galleryImages[0].alt}
-                width={640}
-                height={320}
-                className="w-full h-full object-cover rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => handleImageClick(0)}
-              />
-            ) : (
-              // Use regular img tag for base64 images
-              <img
-                src={galleryImages[0].src}
-                alt={galleryImages[0].alt}
-                className="w-full h-full object-cover rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => handleImageClick(0)}
-              />
-            )
+          ) : aircraftImages.length > 0 ? (
+            <div
+              ref={carouselRef}
+              className="relative w-full h-full overflow-hidden touch-pan-y"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* Carousel container */}
+              <div
+                className="flex transition-transform duration-300 ease-in-out h-full"
+                style={{ transform: `translateX(-${mobileCurrentIndex * 100}%)` }}
+              >
+                {aircraftImages.map((image, index) => (
+                  <div key={index} className="flex-shrink-0 w-full h-full relative">
+                    <img
+                      src={image.large || image.medium || image.original || image.small}
+                      alt={`${instructor} - Photo ${index + 1}`}
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={() => handleMobileImageClick(index)}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Navigation arrows */}
+              {aircraftImages.length > 1 && (
+                <>
+                  <button
+                    onClick={handleMobilePrev}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors z-10"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handleMobileNext}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors z-10"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+
+              {/* Image counter */}
+              {aircraftImages.length > 1 && (
+                <div className="absolute top-4 left-4 bg-black/50 text-white text-sm px-3 py-1 rounded-full z-10">
+                  {mobileCurrentIndex + 1} / {aircraftImages.length}
+                </div>
+              )}
+
+              {/* Dot indicators */}
+              {aircraftImages.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+                  {aircraftImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setMobileCurrentIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        index === mobileCurrentIndex ? 'bg-white' : 'bg-white/50'
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             // Fallback placeholder
             <div className="w-full h-full bg-gray-100 rounded-2xl flex items-center justify-center">
               <div className="text-center text-gray-400">
                 <Camera className="w-8 h-8 mx-auto mb-2" />
-                <p className="text-sm">No image available</p>
-              </div>
-            </div>
-          )}
-          {galleryImages[0] && galleryImages[0].isPlaceholder && !loading && (
-            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center rounded-2xl">
-              <div className="text-center text-gray-400">
-                <Camera className="w-8 h-8 mx-auto mb-2" />
-                <p className="text-sm">Instructor Photo</p>
+                <p className="text-sm">No images available</p>
               </div>
             </div>
           )}
         </div>
+
+        {/* Show all photos button for mobile */}
+        {aircraftImages.length > 1 && (
+          <Button
+            variant="outline"
+            className="w-full mt-4 bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+            onClick={handleShowAllPhotos}
+          >
+            <Grid3X3 className="w-4 h-4 mr-2" />
+            Show all photos ({aircraftImages.length})
+          </Button>
+        )}
       </div>
 
       {/* Desktop: Gallery grid */}

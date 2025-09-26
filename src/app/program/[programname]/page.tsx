@@ -28,12 +28,26 @@ function programNameToSlug(name: string): string {
 //     .replace(/\b\w/g, l => l.toUpperCase()); // Title case
 // }
 
+// Utility function to capitalize each word in a string
+function capitalizeWords(str: string): string {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export default function ProgramDetail() {
   const params = useParams();
   const programSlug = params.programname as string;
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     const fetchProgram = async () => {
@@ -121,54 +135,6 @@ export default function ProgramDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-transparent">
-      {/* Header */}
-      <header className="bg-white shadow-md border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo and Brand */}
-            <div className="flex items-center space-x-4 flex-shrink-0">
-              <Image
-                src="/skyway-logo.webp"
-                alt="Skyway Aviators Logo"
-                width={120}
-                height={40}
-                className="h-10 w-auto"
-              />
-              <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                  Skyway Aviators
-                </h1>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-900 px-3 py-2 text-sm font-bold">
-                Home
-              </Link>
-              <Link href="/#fleet" className="text-gray-900 px-3 py-2 text-sm font-bold">
-                Fleet
-              </Link>
-              <Link href="/#programs" className="text-gray-900 px-3 py-2 text-sm font-bold">
-                Programs
-              </Link>
-              <Link href="#" className="text-gray-900 px-3 py-2 text-sm font-bold">
-                Careers
-              </Link>
-              <Link href="#" className="text-gray-900 px-3 py-2 text-sm font-bold">
-                Finance
-              </Link>
-              <Link href="#" className="text-gray-900 px-3 py-2 text-sm font-bold">
-                Time Build
-              </Link>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
-                Book Flight
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto relative z-10">
@@ -188,14 +154,6 @@ export default function ProgramDetail() {
                   {program.description.replace(/'/g, '&apos;')}
                 </p>
               </div>
-
-              {program.price && (
-                <div className="flex items-center gap-4">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {program.price}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Image */}
@@ -246,7 +204,7 @@ export default function ProgramDetail() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {feature}
+                    {capitalizeWords(feature)}
                   </h3>
                 </div>
               ))}

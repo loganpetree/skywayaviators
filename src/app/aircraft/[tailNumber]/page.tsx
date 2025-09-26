@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { AlertCircle, MapPin, Share, DollarSign, Users, Plane, Shield, Check, Award, CheckCircle, Camera } from "lucide-react"
+import { AlertCircle, MapPin, DollarSign, Users, Plane, Shield, Check, Award, CheckCircle, Camera } from "lucide-react"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -19,6 +19,11 @@ export default function AircraftDetailPage() {
   const params = useParams()
   const router = useRouter()
   const tailNumber = params.tailNumber as string
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   const [showAllPhotos, setShowAllPhotos] = useState(false)
   const [showBookingDialog, setShowBookingDialog] = useState(false)
@@ -189,64 +194,21 @@ export default function AircraftDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-md border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo and Brand */}
-            <div className="flex items-center space-x-4 flex-shrink-0">
-              <Image
-                src="/skyway-logo.webp"
-                alt="Skyway Aviators Logo"
-                width={120}
-                height={40}
-                className="h-10 w-auto"
-              />
-              <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                  Skyway Aviators
-                </h1>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <nav className="hidden md:flex space-x-8">
-              <button
-                onClick={() => router.push('/')}
-                className="text-gray-900 px-3 py-2 text-sm font-bold hover:text-blue-600"
-              >
-                Home
-              </button>
-              <button
-                onClick={() => router.push('/#fleet')}
-                className="text-gray-900 px-3 py-2 text-sm font-bold hover:text-blue-600"
-              >
-                Fleet
-              </button>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
-                Book Flight
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Aircraft Detail Section */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl lg:max-w-none mx-auto">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="mb-8 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Fleet
-          </button>
-
           {/* Aircraft Gallery and Details */}
           <div className="max-w-4xl lg:max-w-[80vw] mx-auto">
+            {/* Back Button - Aligned with gallery left */}
+            <button
+              onClick={() => router.back()}
+              className="mb-8 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Fleet
+            </button>
             {/* Gallery Section */}
             {!showAllPhotos ? (
               <GalleryGrid
@@ -317,28 +279,13 @@ export default function AircraftDetailPage() {
               {aircraft.tailNumber} • {aircraft.capacity} occupants
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-gray-600 hover:bg-gray-50"
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                // Optional: Show feedback
-                alert('Link copied to clipboard!');
-              }}
-            >
-              <Share className="w-4 h-4 mr-2" />
-              <span>Share</span>
-            </Button>
-          </div>
         </div>
 
         {/* Stats Bar */}
         <div className="flex flex-wrap items-center gap-4 sm:gap-8 py-6 text-sm text-gray-600 border-b border-gray-200">
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4" />
-            <span className="font-medium text-gray-900">${aircraft.hourlyRate}</span>
+            <span className="font-medium text-gray-900">{aircraft.hourlyRate}</span>
             <span>per hour</span>
           </div>
           <div className="flex items-center gap-1">
