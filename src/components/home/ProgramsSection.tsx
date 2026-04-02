@@ -1,6 +1,10 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 export default function ProgramsSection() {
+  const router = useRouter();
+
   return (
     <section
       id="programs"
@@ -28,15 +32,16 @@ export default function ProgramsSection() {
               Select a path to get started
             </h2>
           </div>
+          <div className="hidden sm:flex items-center gap-3 ml-auto flex-1 justify-end">
+            <div className="flex-1 max-w-[200px] h-px bg-gray-200" />
+            <span className="text-xs font-medium text-gray-400 whitespace-nowrap">1 / 3</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Flight Training Card */}
           <button
-            onClick={() => {
-              const el = document.getElementById('fleet');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={() => router.push('/flightschool')}
             className="group relative flex flex-col justify-end overflow-hidden rounded-2xl h-64 sm:h-72 text-left cursor-pointer border-2 border-transparent hover:border-sky-400/50 transition-all duration-300"
           >
             <div
@@ -62,10 +67,7 @@ export default function ProgramsSection() {
 
           {/* Time Building Card */}
           <button
-            onClick={() => {
-              const el = document.getElementById('time-build');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={() => router.push('/timebuilding')}
             className="group relative flex flex-col justify-end overflow-hidden rounded-2xl h-64 sm:h-72 text-left cursor-pointer border-2 border-transparent hover:border-amber-400/50 transition-all duration-300"
           >
             <div

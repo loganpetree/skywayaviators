@@ -5,6 +5,7 @@ export { default as FinancingSection } from './FinancingSection';
 export { default as ProgramsCarousel } from './ProgramsCarousel';
 export { default as BookFlightSection } from './BookFlightSection';
 export { default as FleetSection } from './FleetSection';
+export { default as FleetShowcase } from './FleetShowcase';
 export { default as TimeBuildingSection } from './TimeBuildingSection';
 export { default as TestimonialsSection } from './TestimonialsSection';
 export { default as LocationSection } from './LocationSection';

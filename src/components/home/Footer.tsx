@@ -2,8 +2,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const navLinks = [
-  { label: 'Flight School', href: '/#programs' },
-  { label: 'Time Building', href: '/#time-build' },
+  { label: 'Flight School', href: '/flightschool' },
+  { label: 'Time Building', href: '/timebuilding' },
   { label: 'Financing', href: '/#finance' },
   { label: 'Fleet', href: '/#fleet' },
   { label: 'Reviews', href: '/#careers' },

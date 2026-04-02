@@ -20,6 +20,10 @@ export default function FinancingSection() {
               Secure your financing
             </h2>
           </div>
+          <div className="hidden sm:flex items-center gap-3 ml-auto flex-1 justify-end">
+            <div className="flex-1 max-w-[200px] h-px bg-gray-200" />
+            <span className="text-xs font-medium text-gray-400 whitespace-nowrap">2 / 3</span>
+          </div>
         </div>
 
         <div className="relative rounded-3xl overflow-hidden shadow-2xl">

@@ -13,6 +13,7 @@ import {
   FinancingSection,
   BookFlightSection,
   TestimonialsSection,
+  FleetShowcase,
   LocationSection,
   Footer
 } from "@/components/home";
@@ -121,6 +122,8 @@ export default function Home() {
       <BookFlightSection />
 
       <TestimonialsSection />
+
+      <FleetShowcase />
 
       <LocationSection />
 
