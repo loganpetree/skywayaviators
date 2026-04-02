@@ -10,9 +10,10 @@ import { db } from "@/lib/firebase";
 import {
   HeroSection,
   ProgramsSection,
-  FleetSection,
-  TimeBuildingSection,
+  FinancingSection,
+  BookFlightSection,
   TestimonialsSection,
+  LocationSection,
   Footer
 } from "@/components/home";
 import ScrollToSection from "@/components/ScrollToSection";
@@ -113,27 +114,15 @@ export default function Home() {
       <ScrollToSection />
       <HeroSection fleetSize={aircraft.length || undefined} />
 
-      <ProgramsSection
-        programs={programs}
-        programsLoading={programsLoading}
-      />
+      <ProgramsSection />
 
-      <FleetSection
-        aircraft={aircraft}
-        loading={loading}
-      />
+      <FinancingSection />
 
-      <TimeBuildingSection
-        packages={packages}
-        packagesLoading={packagesLoading}
-      />
+      <BookFlightSection />
 
       <TestimonialsSection />
 
-      {/* Main Content */}
-      <main className="flex-grow">
-        {/* Your page content goes here */}
-      </main>
+      <LocationSection />
 
       <Footer />
     </div>

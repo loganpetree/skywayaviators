@@ -1,81 +1,100 @@
-import { Button } from "@/components/ui/button";
+import Image from 'next/image';
+import Link from 'next/link';
+
+const navLinks = [
+  { label: 'Flight School', href: '/#programs' },
+  { label: 'Time Building', href: '/#time-build' },
+  { label: 'Financing', href: '/#finance' },
+  { label: 'Fleet', href: '/#fleet' },
+  { label: 'Reviews', href: '/#careers' },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center">
-          {/* Contact Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Contact Us</h3>
-            <div className="space-y-2 text-gray-300">
-              <p className="text-sm">
-                <span className="font-medium">Office:</span><br />
+    <footer className="bg-gray-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Main footer */}
+        <div className="py-14 grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
+          {/* Brand */}
+          <div className="md:col-span-4">
+            <Link href="/" className="inline-flex items-center gap-3 mb-5">
+              <Image
+                src="/skyway-logo.webp"
+                alt="Skyway Aviators"
+                width={96}
+                height={32}
+                className="h-8 w-auto"
+              />
+              <span className="text-lg font-bold text-white tracking-tight">
+                Skyway Aviators
+              </span>
+            </Link>
+            <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
+              Lancaster&apos;s premier flight training. From private pilot to ATP — we get you there.
+            </p>
+          </div>
+
+          {/* Links */}
+          <div className="md:col-span-3">
+            <h4 className="text-xs font-semibold tracking-widest uppercase text-gray-500 mb-4">
+              Navigate
+            </h4>
+            <ul className="space-y-2.5">
+              {navLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div className="md:col-span-3">
+            <h4 className="text-xs font-semibold tracking-widest uppercase text-gray-500 mb-4">
+              Contact
+            </h4>
+            <ul className="space-y-2.5 text-sm text-gray-400">
+              <li>
+                <a href="tel:+14699284678" className="hover:text-white transition-colors">
+                  (469) 928-4678
+                </a>
+              </li>
+              <li>
+                <a href="mailto:info@skywayaviators.com" className="hover:text-white transition-colors">
+                  info@skywayaviators.com
+                </a>
+              </li>
+              <li className="pt-1 leading-relaxed">
                 730 Ferris Rd. Suite 102<br />
-                Lancaster, Tx 75146
-              </p>
-              <p className="text-sm">
-                <span className="font-medium">Call:</span><br />
-                +1 (469) 928-4678
-              </p>
-              <p className="text-sm">
-                <span className="font-medium">Email:</span><br />
-                info@skywayaviators.com
-              </p>
-              <p className="text-sm">
-                <span className="font-medium">Site:</span><br />
-                skywayaviators.com
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Quick Links</h3>
-            <ul className="space-y-2 text-gray-300">
-              <li><a href="#" className="text-sm ">Fleet</a></li>
-              <li><a href="#" className="text-sm ">Careers</a></li>
-              <li><a href="#" className="text-sm ">Programs</a></li>
-              <li><a href="#" className="text-sm ">Finance</a></li>
-              <li><a href="#" className="text-sm ">Time Build</a></li>
+                Lancaster, TX 75146
+              </li>
             </ul>
           </div>
 
-          {/* Services */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Services</h3>
-            <ul className="space-y-2 text-gray-300">
-              <li><a href="#" className="text-sm ">Charter Flights</a></li>
-              <li><a href="#" className="text-sm ">Aircraft Management</a></li>
-              <li><a href="#" className="text-sm ">Maintenance</a></li>
-              <li><a href="#" className="text-sm ">Pilot Training</a></li>
-            </ul>
+          {/* Hours */}
+          <div className="md:col-span-2">
+            <h4 className="text-xs font-semibold tracking-widest uppercase text-gray-500 mb-4">
+              Hours
+            </h4>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              Monday – Sunday<br />
+              Sunrise to Sunset
+            </p>
           </div>
-
-          {/* Chat Widget */}
-          {/* <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Questions?</h3>
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-gray-900 font-semibold text-sm">👤</span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Have a question?</p>
-                  <p className="text-xs text-gray-400">Text us here</p>
-                </div>
-              </div>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                Start Chat
-              </Button>
-            </div>
-          </div> */}
         </div>
 
-        {/* Copyright */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-sm text-gray-400">
-            © 2022 Skyway Aviators. All rights reserved.
+        {/* Bottom bar */}
+        <div className="border-t border-gray-800/60 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-500">
+            &copy; {new Date().getFullYear()} Skyway Aviators. All rights reserved.
+          </p>
+          <p className="text-xs text-gray-600">
+            Lancaster Regional Airport (KLNC)
           </p>
         </div>
       </div>

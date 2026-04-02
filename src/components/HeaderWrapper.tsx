@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
 import BookingDialog from './home/BookingDialog';
@@ -8,6 +8,12 @@ import BookingDialog from './home/BookingDialog';
 export default function HeaderWrapper() {
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const open = () => setShowBookingDialog(true);
+    window.addEventListener('open-booking-dialog', open);
+    return () => window.removeEventListener('open-booking-dialog', open);
+  }, []);
 
   if (pathname?.startsWith('/admin')) {
     return null;
