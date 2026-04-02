@@ -111,7 +111,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-transparent">
       <ScrollToSection />
-      <HeroSection />
+      <HeroSection fleetSize={aircraft.length || undefined} />
 
       <ProgramsSection
         programs={programs}

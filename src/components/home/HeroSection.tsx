@@ -1,54 +1,86 @@
-export default function HeroSection() {
+interface HeroSectionProps {
+  fleetSize?: number;
+}
+
+export default function HeroSection({ fleetSize }: HeroSectionProps) {
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-b from-white to-gray-50" style={{
-      backgroundImage: `url('/N218YZ/9C767A92ED0B_ID.jpg')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat'
-    }}>
-      {/* Overlay for better text readability */}
-      <div className="absolute inset-0 bg-white/80"></div>
+    <section className="relative overflow-hidden bg-gray-900 min-h-[85vh] flex items-center">
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover scale-105"
+      >
+        <source src="/videos/skyway-clips.mp4" type="video/mp4" />
+      </video>
 
-      <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex justify-center">
-          {/* Centered Content */}
-          <div className="space-y-8 text-center max-w-4xl">
-            {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
-              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-              Part 61 Certified with 141 Pending
+      <div className="absolute inset-0 bg-black/45" />
+
+      <div className="relative z-10 w-full px-6 sm:px-10 lg:px-16 py-24">
+        <div className="max-w-7xl mx-auto text-center flex flex-col items-center">
+          <div
+            className="animate-hero-fade-up inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-medium tracking-widest uppercase backdrop-blur-sm border border-white/10 mb-6"
+            style={{ animationDelay: '0.1s' }}
+          >
+            <svg className="w-4 h-4 mr-2 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+            Part 61 Certified &middot; 141 Pending
+          </div>
+
+          <h1
+            className="animate-hero-fade-up text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-6"
+            style={{ animationDelay: '0.25s' }}
+          >
+            From Zero
+            <br />
+            to <span className="text-sky-400">1,500</span>
+          </h1>
+
+          <p
+            className="animate-hero-fade-up text-base sm:text-lg text-gray-300 max-w-2xl leading-relaxed"
+            style={{ animationDelay: '0.45s' }}
+          >
+            Lancaster&apos;s premier flight training. Join hundreds of successful pilots who started their aviation careers with us.
+          </p>
+
+          {/* Stats */}
+          <div
+            className="animate-hero-fade-up flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mt-8"
+            style={{ animationDelay: '0.6s' }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-white">170+</span>
+              <span className="text-sm text-white/50">Students</span>
             </div>
-
-            {/* Main Heading */}
-            <div className="space-y-4">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">
-                From Zero to 1,500
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-600 max-w-3xl leading-relaxed">
-                Transform your dreams into reality with Lancaster&apos;s premier flight training. Join hundreds of successful pilots who started their aviation careers with us.
-              </p>
+            <span className="text-white/20">|</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-white">{fleetSize || '—'}</span>
+              <span className="text-sm text-white/50">Aircraft</span>
             </div>
+            <span className="text-white/20">|</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-white">5.0</span>
+              <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-sm text-white/50">Rating</span>
+            </div>
+            <span className="text-white/20">|</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-white">Part 61</span>
+              <span className="text-sm text-white/50">Certified</span>
+            </div>
+          </div>
 
-            {/* Sub Description - Stats */}
-            <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-8">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <svg key={star} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <span className="text-gray-700 font-semibold">5/5 Rating Average</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
-                </div>
-                <span className="text-gray-700 font-semibold">Over 170 Students</span>
-              </div>
+          {/* Scroll indicator */}
+          <div className="animate-hero-fade-up mt-10" style={{ animationDelay: '0.8s' }}>
+            <div className="animate-hero-bounce flex flex-col items-center gap-1.5 text-white/40">
+              <span className="text-[10px] tracking-widest uppercase">Scroll</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
             </div>
           </div>
         </div>
