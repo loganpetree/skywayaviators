@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center">
           {/* Contact Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Contact Us</h3>
@@ -16,7 +16,7 @@ export default function Footer() {
               </p>
               <p className="text-sm">
                 <span className="font-medium">Call:</span><br />
-                +1(469)9284-678
+                +1 (469) 928-4678
               </p>
               <p className="text-sm">
                 <span className="font-medium">Email:</span><br />
@@ -53,7 +53,7 @@ export default function Footer() {
           </div>
 
           {/* Chat Widget */}
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Questions?</h3>
             <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
               <div className="flex items-center space-x-3 mb-3">
@@ -69,7 +69,7 @@ export default function Footer() {
                 Start Chat
               </Button>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Copyright */}

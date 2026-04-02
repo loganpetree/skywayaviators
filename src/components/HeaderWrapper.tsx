@@ -9,16 +9,16 @@ export default function HeaderWrapper() {
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const pathname = usePathname();
 
-  // Hide header on admin routes
-  const isAdminRoute = pathname?.startsWith('/admin');
-
-  if (isAdminRoute) {
+  if (pathname?.startsWith('/admin')) {
     return null;
   }
+
+  const isHomePage = pathname === '/';
 
   return (
     <>
       <Header onBookingClick={() => setShowBookingDialog(true)} />
+      {!isHomePage && <div className="h-[72px]" />}
       <BookingDialog
         open={showBookingDialog}
         onOpenChange={setShowBookingDialog}

@@ -1,229 +1,313 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Plane } from "lucide-react";
 
 interface HeaderProps {
   onBookingClick: () => void;
 }
 
+const NAV_ITEMS = [
+  { label: 'Home', href: '/', sectionId: null },
+  { label: 'Fleet', href: null, sectionId: 'fleet' },
+  { label: 'Programs', href: null, sectionId: 'programs' },
+  { label: 'Time Build', href: null, sectionId: 'time-build' },
+  { label: 'Careers', href: null, sectionId: 'careers' },
+  { label: 'Finance', href: null, sectionId: 'finance' },
+] as const;
+
 export default function Header({ onBookingClick }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const isHomePage = pathname === '/';
 
-  // Map navigation tabs to section IDs
-  const sectionMap: Record<string, string> = {
-    'Fleet': 'fleet',
-    'Careers': 'careers',
-    'Programs': 'programs',
-    'Finance': 'finance',
-    'Time Build': 'time-build'
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  // Handle navigation tab clicks
-  const handleNavigation = (tabName: string) => {
-    const isHomePage = pathname === '/';
-    const sectionId = sectionMap[tabName];
+  useEffect(() => {
+    if (!isHomePage) return;
 
-    if (!sectionId) return; // Skip if not a section tab
+    const sectionIds = NAV_ITEMS
+      .filter((item) => item.sectionId)
+      .map((item) => item.sectionId as string);
 
-    if (isHomePage) {
-      // Scroll to section on current page
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id);
+        }
+      },
+      { rootMargin: '-20% 0px -60% 0px', threshold: [0, 0.25, 0.5] }
+    );
+
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [isHomePage]);
+
+  const handleNavigation = useCallback(
+    (item: (typeof NAV_ITEMS)[number]) => {
+      if (item.href) {
+        router.push(item.href);
+        return;
       }
-    } else {
-      // Navigate to homepage with section hash
-      router.push(`/#${sectionId}`);
-    }
+      if (!item.sectionId) return;
+
+      if (isHomePage) {
+        document
+          .getElementById(item.sectionId)
+          ?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        router.push(`/#${item.sectionId}`);
+      }
+    },
+    [isHomePage, router]
+  );
+
+  const isActive = (item: (typeof NAV_ITEMS)[number]) => {
+    if (item.href === '/' && isHomePage && !activeSection) return true;
+    if (item.sectionId && activeSection === item.sectionId) return true;
+    return false;
   };
+
+  const headerBg = scrolled
+    ? 'bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] border-b border-gray-200/60'
+    : 'bg-transparent border-b border-transparent';
+
+  const textColor = scrolled ? 'text-gray-700' : 'text-white/90';
+  const textHover = scrolled ? 'hover:text-gray-900' : 'hover:text-white';
+  const activeTextColor = scrolled ? 'text-gray-900' : 'text-white';
+  const logoTextColor = scrolled ? 'text-gray-900' : 'text-white';
 
   return (
     <>
-      {/* Header */}
-      <header className="bg-white shadow-md border-b">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out ${headerBg}`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo and Brand */}
-            <button
-              onClick={() => window.location.href = '/'}
-              className="flex items-center space-x-4 flex-shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
+          <div className="flex justify-between items-center h-[72px]">
+            {/* Logo */}
+            <Link
+              href="/"
+              className="flex items-center gap-3 flex-shrink-0 group"
             >
-              <Image
-                src="/skyway-logo.webp"
-                alt="Skyway Aviators Logo - Go to homepage"
-                width={120}
-                height={40}
-                className="h-10 w-auto"
-              />
-              <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                  Skyway Aviators
-                </h1>
+              <div className={`rounded-lg overflow-hidden transition-shadow duration-300 ${scrolled ? '' : 'shadow-lg shadow-black/20'}`}>
+                <Image
+                  src="/skyway-logo.webp"
+                  alt="Skyway Aviators"
+                  width={112}
+                  height={36}
+                  className="h-9 w-auto"
+                  priority
+                />
               </div>
-            </button>
+              <span
+                className={`hidden lg:block text-lg font-bold tracking-tight transition-colors duration-300 group-hover:opacity-80 ${logoTextColor}`}
+              >
+                Skyway Aviators
+              </span>
+            </Link>
 
-            {/* Navigation Tabs - Desktop */}
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-900 px-3 py-2 text-sm font-bold hover:text-gray-700 transition-colors">
-                Home
-              </Link>
-              <button
-                onClick={() => handleNavigation('Fleet')}
-                className="text-gray-900 px-3 py-2 text-sm font-bold hover:text-gray-700 transition-colors cursor-pointer"
-              >
-                Fleet
-              </button>
-              <button
-                onClick={() => handleNavigation('Careers')}
-                className="text-gray-900 px-3 py-2 text-sm font-bold hover:text-gray-700 transition-colors cursor-pointer"
-              >
-                Careers
-              </button>
-              <button
-                onClick={() => handleNavigation('Programs')}
-                className="text-gray-900 px-3 py-2 text-sm font-bold hover:text-gray-700 transition-colors cursor-pointer"
-              >
-                Programs
-              </button>
-              <button
-                onClick={() => handleNavigation('Finance')}
-                className="text-gray-900 px-3 py-2 text-sm font-bold hover:text-gray-700 transition-colors cursor-pointer"
-              >
-                Finance
-              </button>
-              <button
-                onClick={() => handleNavigation('Time Build')}
-                className="text-gray-900 px-3 py-2 text-sm font-bold hover:text-gray-700 transition-colors cursor-pointer"
-              >
-                Time Build
-              </button>
-              <Button
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={onBookingClick}
-              >
-                Book Flight
-              </Button>
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {NAV_ITEMS.map((item) => {
+                const active = isActive(item);
+                return item.href ? (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={`relative px-3 py-2 text-[13px] font-semibold tracking-wide uppercase transition-colors duration-200 ${
+                      active
+                        ? activeTextColor
+                        : `${textColor} ${textHover}`
+                    }`}
+                  >
+                    {item.label}
+                    {active && (
+                      <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-sky-400 rounded-full animate-nav-underline" />
+                    )}
+                  </Link>
+                ) : (
+                  <button
+                    key={item.label}
+                    onClick={() => handleNavigation(item)}
+                    className={`relative px-3 py-2 text-[13px] font-semibold tracking-wide uppercase transition-colors duration-200 cursor-pointer ${
+                      active
+                        ? activeTextColor
+                        : `${textColor} ${textHover}`
+                    }`}
+                  >
+                    {item.label}
+                    {active && (
+                      <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-sky-400 rounded-full animate-nav-underline" />
+                    )}
+                  </button>
+                );
+              })}
+
+              <div className="ml-3 pl-3 border-l border-current/10">
+                <Button
+                  onClick={onBookingClick}
+                  className="bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm px-5 py-2 rounded-lg shadow-md shadow-sky-500/25 hover:shadow-lg hover:shadow-sky-500/30 transition-all duration-200 cursor-pointer"
+                >
+                  <Plane className="w-4 h-4 mr-1.5 -rotate-45" />
+                  Book Flight
+                </Button>
+              </div>
             </nav>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              className={`md:hidden p-2 rounded-lg transition-colors duration-200 cursor-pointer ${
+                scrolled
+                  ? 'text-gray-600 hover:bg-gray-100'
+                  : 'text-white/90 hover:bg-white/10'
+              }`}
+              aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}>
-          <div className="fixed inset-0 bg-white transform transition-transform duration-300 ease-in-out">
-            <div className="flex flex-col h-full" onClick={(e) => e.stopPropagation()}>
-              {/* Mobile Menu Header */}
-              <div className="flex items-center justify-between p-4 border-b">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
-                >
-                  <Image
-                    src="/skyway-logo.webp"
-                    alt="Skyway Aviators Logo"
-                    width={100}
-                    height={32}
-                    className="h-8 w-auto"
-                  />
-                  <span className="text-lg font-bold text-gray-900">Skyway Aviators</span>
-                </button>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
+      {/* Mobile Overlay */}
+      <div
+        className={`md:hidden fixed inset-0 z-40 transition-opacity duration-300 ${
+          mobileMenuOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          onClick={() => setMobileMenuOpen(false)}
+        />
 
-              {/* Mobile Menu Items */}
-              <div className="flex-1 px-4 py-6 space-y-1">
+        <div
+          className={`absolute top-0 right-0 h-full w-[min(85vw,320px)] bg-white shadow-2xl transition-transform duration-300 ease-out ${
+            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5"
+            >
+              <Image
+                src="/skyway-logo.webp"
+                alt="Skyway Aviators"
+                width={96}
+                height={32}
+                className="h-8 w-auto"
+              />
+              <span className="text-base font-bold text-gray-900">
+                Skyway Aviators
+              </span>
+            </Link>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 -mr-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Mobile Nav Items */}
+          <div className="flex flex-col px-4 py-5 gap-0.5">
+            {NAV_ITEMS.map((item, i) => {
+              const active = isActive(item);
+              const sharedClasses = `flex items-center gap-3 w-full text-left px-4 py-3.5 rounded-xl text-[15px] font-medium transition-all duration-200 ${
+                active
+                  ? 'bg-sky-50 text-sky-700 font-semibold'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`;
+
+              const inner = (
+                <>
+                  {active && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500 flex-shrink-0" />
+                  )}
+                  {item.label}
+                </>
+              );
+
+              return item.href ? (
                 <Link
-                  href="/"
-                  className="block px-4 py-3 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  key={item.label}
+                  href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
+                  className={sharedClasses}
+                  style={{
+                    animationDelay: `${i * 50}ms`,
+                    animation: mobileMenuOpen
+                      ? `mobile-slide-in 0.3s ease-out ${i * 50}ms both`
+                      : 'none',
+                  }}
                 >
-                  Home
+                  {inner}
                 </Link>
+              ) : (
                 <button
-                  className="block w-full text-left px-4 py-3 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                  key={item.label}
                   onClick={() => {
-                    handleNavigation('Fleet');
+                    handleNavigation(item);
                     setMobileMenuOpen(false);
                   }}
-                >
-                  Fleet
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-3 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    handleNavigation('Careers');
-                    setMobileMenuOpen(false);
+                  className={`${sharedClasses} cursor-pointer`}
+                  style={{
+                    animation: mobileMenuOpen
+                      ? `mobile-slide-in 0.3s ease-out ${i * 50}ms both`
+                      : 'none',
                   }}
                 >
-                  Careers
+                  {inner}
                 </button>
-                <button
-                  className="block w-full text-left px-4 py-3 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    handleNavigation('Programs');
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  Programs
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-3 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    handleNavigation('Finance');
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  Finance
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-3 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    handleNavigation('Time Build');
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  Time Build
-                </button>
-                <div className="pt-4 border-t">
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onBookingClick();
-                    }}
-                  >
-                    Book Flight
-                  </Button>
-                </div>
-              </div>
-            </div>
+              );
+            })}
+          </div>
+
+          {/* Mobile CTA */}
+          <div className="absolute bottom-0 left-0 right-0 p-5 border-t border-gray-100 bg-gray-50/80">
+            <Button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onBookingClick();
+              }}
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-sky-500/20 cursor-pointer"
+            >
+              <Plane className="w-4 h-4 mr-2 -rotate-45" />
+              Book Flight
+            </Button>
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }

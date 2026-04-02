@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Carousel } from "@/components/ui/apple-cards-carousel";
 import { Button } from "@/components/ui/button";
 import { Program } from "@/types/program";
+import { ShieldCheck, Clock, Sparkles, ArrowRight } from "lucide-react";
 
 interface ProgramsSectionProps {
   programs: Program[];
@@ -116,48 +117,93 @@ export default function ProgramsSection({ programs, programsLoading }: ProgramsS
         )}
       </div>
 
-      {/* Financing Modal */}
-      <div id="finance" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <div
-          className="relative rounded-3xl p-10 md:p-12 text-center text-white shadow-2xl overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, rgba(76, 71, 236, 0.95) 0%, rgba(99, 102, 241, 0.95) 50%, rgba(139, 92, 246, 0.95) 100%)'
-          }}
-        >
-          {/* Background decorative elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-xl -translate-y-8 translate-x-8"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-lg translate-y-6 -translate-x-6"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+      {/* Financing Section */}
+      <div id="finance" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900" />
+          <div className="absolute inset-0 opacity-30" style={{
+            backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 40%)',
+          }} />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
 
-          <div className="relative z-10">
+          <div className="relative z-10 grid md:grid-cols-5 gap-8 p-8 md:p-12 lg:p-16">
+            {/* Left: Copy & CTA */}
+            <div className="md:col-span-3 flex flex-col justify-center">
+              <span className="inline-flex items-center gap-2.5 mb-5">
+                <span className="text-[11px] font-medium tracking-widest uppercase text-indigo-300/70">Powered by</span>
+                <Image
+                  src="/wurthy-logo.svg"
+                  alt="Wurthy"
+                  width={80}
+                  height={18}
+                  className="h-[18px] w-auto opacity-70"
+                />
+              </span>
 
-            <h3 className="text-3xl md:text-4xl font-black mb-6 tracking-tight">
-              Easy Financing Available
-            </h3>
+              <h3 className="text-3xl md:text-4xl lg:text-[2.75rem] font-black text-white tracking-tight leading-tight mb-5">
+                Focus on Flying,
+                <br />
+                <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                  Not Finances
+                </span>
+              </h3>
 
-            <p className="text-lg md:text-xl mb-8 max-w-4xl mx-auto leading-relaxed opacity-90">
-              Take the first step towards your aviation career with flexible financing options through
-              <span className="font-semibold text-white"> Wurthy</span>.
-              Start your training today with affordable monthly payments tailored to your needs.
-            </p>
+              <p className="text-base md:text-lg text-gray-300 leading-relaxed max-w-xl mb-8">
+                Flexible financing lets you start training today with affordable monthly payments.
+                No upfront burden — just a clear path from student pilot to the flight deck.
+              </p>
 
-            <Button className="bg-white text-indigo-600 hover:bg-gray-50 font-bold px-10 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-              Learn About Financing
-            </Button>
-
-            <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm opacity-75">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>No Credit Check Required</span>
+              <div className="flex flex-wrap gap-3">
+                <Button className="bg-indigo-500 hover:bg-indigo-400 text-white font-semibold px-7 py-3 text-sm rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-400/30 transition-all duration-200 cursor-pointer">
+                  Apply for Financing
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span>Flexible Terms</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                <span>Quick Approval</span>
-              </div>
+            </div>
+
+            {/* Right: Feature Cards */}
+            <div className="md:col-span-2 grid grid-cols-1 gap-3">
+              {[
+                {
+                  icon: ShieldCheck,
+                  title: 'No Credit Check',
+                  desc: 'Get approved based on your earning potential, not your credit score.',
+                  color: 'text-emerald-400',
+                  bg: 'bg-emerald-500/10 border-emerald-500/20',
+                },
+                {
+                  icon: Clock,
+                  title: 'Quick Approval',
+                  desc: 'Apply in minutes and get a decision the same day.',
+                  color: 'text-sky-400',
+                  bg: 'bg-sky-500/10 border-sky-500/20',
+                },
+                {
+                  icon: Sparkles,
+                  title: 'Flexible Terms',
+                  desc: 'Monthly payments designed to fit a student pilot budget.',
+                  color: 'text-purple-400',
+                  bg: 'bg-purple-500/10 border-purple-500/20',
+                },
+              ].map((feat) => (
+                <div
+                  key={feat.title}
+                  className={`flex items-start gap-4 rounded-2xl border p-5 backdrop-blur-sm ${feat.bg}`}
+                >
+                  <div className={`mt-0.5 flex-shrink-0 ${feat.color}`}>
+                    <feat.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-1">
+                      {feat.title}
+                    </h4>
+                    <p className="text-xs leading-relaxed text-gray-400">
+                      {feat.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

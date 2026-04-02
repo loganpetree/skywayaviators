@@ -163,4 +163,29 @@
   animation: hero-bounce-subtle 2s ease-in-out infinite;
 }
 
+@keyframes nav-underline {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-nav-underline {
+  animation: nav-underline 0.25s ease-out both;
+  transform-origin: center;
+}
+
+@keyframes mobile-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 

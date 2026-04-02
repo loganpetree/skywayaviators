@@ -15,7 +15,7 @@ export default function HeroSection({ fleetSize }: HeroSectionProps) {
         <source src="/videos/skyway-clips.mp4" type="video/mp4" />
       </video>
 
-      <div className="absolute inset-0 bg-black/45" />
+      <div className="absolute inset-0 bg-black/60" />
 
       <div className="relative z-10 w-full px-6 sm:px-10 lg:px-16 py-24">
         <div className="max-w-7xl mx-auto text-center flex flex-col items-center">
@@ -33,9 +33,7 @@ export default function HeroSection({ fleetSize }: HeroSectionProps) {
             className="animate-hero-fade-up text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-6"
             style={{ animationDelay: '0.25s' }}
           >
-            From Zero
-            <br />
-            to <span className="text-sky-400">1,500</span>
+            Skyway Aviators
           </h1>
 
           <p
@@ -71,16 +69,6 @@ export default function HeroSection({ fleetSize }: HeroSectionProps) {
             <div className="flex items-center gap-2">
               <span className="text-xl font-bold text-white">Part 61</span>
               <span className="text-sm text-white/50">Certified</span>
-            </div>
-          </div>
-
-          {/* Scroll indicator */}
-          <div className="animate-hero-fade-up mt-10" style={{ animationDelay: '0.8s' }}>
-            <div className="animate-hero-bounce flex flex-col items-center gap-1.5 text-white/40">
-              <span className="text-[10px] tracking-widest uppercase">Scroll</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
             </div>
           </div>
         </div>
