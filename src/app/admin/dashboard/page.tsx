@@ -1823,7 +1823,6 @@ export default function DashboardPage() {
                 setDialogOpen(open);
                 if (!open) {
                   setEditingPackage(null);
-                  setExistingPackageImages([]);
                 }
               }}>
                 <DialogTrigger asChild>
