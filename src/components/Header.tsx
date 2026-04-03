@@ -15,9 +15,8 @@ const NAV_ITEMS = [
   { label: 'Home', href: '/', sectionId: null },
   { label: 'Fleet', href: null, sectionId: 'fleet' },
   { label: 'School', href: '/flightschool', sectionId: null },
-  { label: 'Time Build', href: '/timebuilding', sectionId: null },
-  { label: 'Careers', href: null, sectionId: 'careers' },
-  { label: 'Finance', href: null, sectionId: 'finance' },
+  { label: 'Timebuilding', href: '/timebuilding', sectionId: null },
+  { label: 'Financing', href: null, sectionId: 'finance' },
 ] as const;
 
 export default function Header({ onBookingClick }: HeaderProps) {

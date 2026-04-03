@@ -67,8 +67,6 @@ export default function DashboardPage() {
   const [packagesList, setPackagesList] = useState<Package[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
-  const [packageImagePreviews, setPackageImagePreviews] = useState<string[]>([]);
-  const [existingPackageImages, setExistingPackageImages] = useState<{ original: string; large: string; medium: string; small: string }[]>([]);
   const [todayRequests, setTodayRequests] = useState<Request[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [allRequests, setAllRequests] = useState<Request[]>([]);
@@ -122,21 +120,17 @@ export default function DashboardPage() {
     price: "",
   });
   const [packageForm, setPackageForm] = useState<{
-    images: File[];
     name: string;
-    description: string;
-    features: string[];
-    price: string;
-    duration: string;
-    category: string;
+    hoursMin: number;
+    hoursMax: number;
+    pricePerHour: number;
+    totalPrice: number;
   }>({
-    images: [],
     name: "",
-    description: "",
-    features: [],
-    price: "",
-    duration: "",
-    category: "",
+    hoursMin: 0,
+    hoursMax: 0,
+    pricePerHour: 0,
+    totalPrice: 0,
   });
   const router = useRouter();
 
@@ -177,13 +171,6 @@ export default function DashboardPage() {
       });
       setProgramImagePreviews([]);
 
-      // Clean up package image previews
-      packageImagePreviews.forEach(url => {
-        if (url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-      setPackageImagePreviews([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dialogOpen]);
@@ -211,7 +198,7 @@ export default function DashboardPage() {
     }));
   };
 
-  const handlePackageFormChange = (field: keyof typeof packageForm, value: string | string[] | File[]) => {
+  const handlePackageFormChange = (field: keyof typeof packageForm, value: string | number | string[] | File[]) => {
     setPackageForm(prev => ({
       ...prev,
       [field]: value
@@ -356,74 +343,6 @@ export default function DashboardPage() {
     setDraggedIndex(null);
   };
 
-  const createPackageImagePreviews = (files: File[]) => {
-    // Clean up existing previews
-    packageImagePreviews.forEach(url => {
-      if (url.startsWith('blob:')) {
-        URL.revokeObjectURL(url);
-      }
-    });
-
-    const newPreviews: string[] = [];
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const previewUrl = URL.createObjectURL(file);
-        newPreviews.push(previewUrl);
-      }
-    });
-
-    setPackageImagePreviews(newPreviews);
-  };
-
-  const handlePackageDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handlePackageDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handlePackageDragEnd = () => {
-    setDraggedIndex(null);
-  };
-
-  const handlePackageDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-
-    if (draggedIndex === null || draggedIndex === dropIndex) {
-      return;
-    }
-
-    if (editingPackage) {
-      // Handle existing images reordering
-      const newExistingImages = [...existingPackageImages];
-      const [draggedImage] = newExistingImages.splice(draggedIndex, 1);
-      newExistingImages.splice(dropIndex, 0, draggedImage);
-
-      const newPreviews = [...packageImagePreviews];
-      const [draggedPreview] = newPreviews.splice(draggedIndex, 1);
-      newPreviews.splice(dropIndex, 0, draggedPreview);
-
-      setExistingPackageImages(newExistingImages);
-      setPackageImagePreviews(newPreviews);
-    } else {
-      // Handle new images reordering
-      const newFiles = [...packageForm.images];
-      const [draggedFile] = newFiles.splice(draggedIndex, 1);
-      newFiles.splice(dropIndex, 0, draggedFile);
-
-      const newPreviews = [...packageImagePreviews];
-      const [draggedPreview] = newPreviews.splice(draggedIndex, 1);
-      newPreviews.splice(dropIndex, 0, draggedPreview);
-
-      handlePackageFormChange('images', newFiles);
-      setPackageImagePreviews(newPreviews);
-    }
-
-    setDraggedIndex(null);
-  };
 
   const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<Blob> => {
     return new Promise((resolve) => {
@@ -822,24 +741,12 @@ export default function DashboardPage() {
   const handleEditPackage = (pkg: Package) => {
     setEditingPackage(pkg);
 
-    // Initialize existing images
-    if (pkg.images && pkg.images.length > 0) {
-      setExistingPackageImages(pkg.images);
-      const previews = pkg.images.map(imageData => imageData.medium || imageData.small || imageData.original);
-      setPackageImagePreviews(previews);
-    } else {
-      setExistingPackageImages([]);
-      setPackageImagePreviews([]);
-    }
-
     setPackageForm({
-      images: [], // Keep as empty since we're editing existing images separately
       name: pkg.name,
-      description: pkg.description,
-      features: pkg.features,
-      price: pkg.price || "",
-      duration: pkg.duration || "",
-      category: pkg.category || "",
+      hoursMin: pkg.hoursMin || pkg.hours || 0,
+      hoursMax: pkg.hoursMax || pkg.hours || 0,
+      pricePerHour: pkg.pricePerHour || 0,
+      totalPrice: pkg.totalPrice || 0,
     });
     setDialogOpen(true);
   };
@@ -861,67 +768,13 @@ export default function DashboardPage() {
     setIsSubmitting(true);
 
     try {
-      // Process and upload images to Firebase Storage with multiple sizes
-      let uploadedImageData: { original: string; large: string; medium: string; small: string }[] = [];
-
-      // Handle existing images (may have been reordered or deleted)
-      if (editingPackage && existingPackageImages.length > 0) {
-        uploadedImageData = [...existingPackageImages];
-      }
-
-      // Add any new images uploaded
-      if (packageForm.images.length > 0) {
-        for (const imageFile of packageForm.images) {
-          const baseName = `${Date.now()}_${imageFile.name.replace(/\.[^/.]+$/, "")}`;
-
-          // Create different sizes
-          const [originalBlob, largeBlob, mediumBlob, smallBlob] = await Promise.all([
-            Promise.resolve(imageFile), // Keep original as-is
-            resizeImage(imageFile, 1200, 1200), // Large
-            resizeImage(imageFile, 600, 600),   // Medium
-            resizeImage(imageFile, 200, 200),   // Small
-          ]);
-
-          // Upload all sizes
-          const uploadPromises = [
-            { size: 'original', blob: originalBlob, name: `${baseName}_original.jpg` },
-            { size: 'large', blob: largeBlob, name: `${baseName}_large.jpg` },
-            { size: 'medium', blob: mediumBlob, name: `${baseName}_medium.jpg` },
-            { size: 'small', blob: smallBlob, name: `${baseName}_small.jpg` },
-          ];
-
-          const uploadedUrls: { [key: string]: string } = {};
-
-          for (const { size, blob, name } of uploadPromises) {
-            const storageRef = ref(storage, `packages/${name}`);
-            const snapshot = await uploadBytes(storageRef, blob);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            uploadedUrls[size] = downloadURL;
-          }
-
-          uploadedImageData.push({
-            original: uploadedUrls.original,
-            large: uploadedUrls.large,
-            medium: uploadedUrls.medium,
-            small: uploadedUrls.small,
-          });
-        }
-      }
-
-      // Prepare package data
       const packageData: Partial<Package> = {
         name: packageForm.name,
-        description: packageForm.description,
-        features: packageForm.features,
-        price: packageForm.price,
-        duration: packageForm.duration,
-        category: packageForm.category,
+        hoursMin: packageForm.hoursMin,
+        hoursMax: packageForm.hoursMax,
+        pricePerHour: packageForm.pricePerHour,
+        totalPrice: packageForm.totalPrice,
       };
-
-      // Only add images if they exist
-      if (uploadedImageData.length > 0) {
-        packageData.images = uploadedImageData;
-      }
 
       if (editingPackage && editingPackage.id) {
         // Update existing package
@@ -943,22 +796,15 @@ export default function DashboardPage() {
       // Close dialog and reset form
       setDialogOpen(false);
       setPackageForm({
-        images: [],
         name: "",
-        description: "",
-        features: [],
-        price: "",
-        duration: "",
-        category: "",
+        hoursMin: 0,
+        hoursMax: 0,
+        pricePerHour: 0,
+        totalPrice: 0,
       });
 
       // Clear editing state
       setEditingPackage(null);
-      setExistingPackageImages([]);
-
-      // Clean up package image previews
-      packageImagePreviews.forEach(url => URL.revokeObjectURL(url));
-      setPackageImagePreviews([]);
 
       // Refresh packages list
       await fetchPackages();
@@ -2012,191 +1858,100 @@ export default function DashboardPage() {
                   </DialogHeader>
 
                   <form onSubmit={handlePackageSubmit} className="space-y-8">
-                    {/* Package Images */}
+                    {/* Hour Range */}
                     <div className="space-y-2">
-                      <Label htmlFor="packageImages">
-                        Package Images
-                        {editingPackage && packageImagePreviews.length > 0 && (
-                          <span className="text-sm text-muted-foreground ml-2">
-                            ({packageImagePreviews.length} existing)
-                          </span>
-                        )}
-                      </Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                        <input
-                          type="file"
-                          id="packageImages"
-                          multiple
-                          accept="image/*"
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files || []);
-                            handlePackageFormChange('images', files);
-                            createPackageImagePreviews(files);
-                          }}
-                          className="hidden"
-                          disabled={isSubmitting}
-                        />
-                        <label htmlFor="packageImages" className="cursor-pointer">
-                          <div className="flex flex-col items-center space-y-2">
-                            <svg
-                              className="w-8 h-8 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                              />
-                            </svg>
-                            <div className="text-sm text-gray-600">
-                              <span className="font-medium text-blue-600 hover:text-blue-500">
-                                {editingPackage ? 'Add more images' : 'Click to upload'}
-                              </span> or drag and drop
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              PNG, JPG, GIF up to 10MB each
-                            </div>
-                          </div>
-                        </label>
-                      </div>
-                      {packageImagePreviews.length > 0 && (
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-600 mb-2">
-                            {packageImagePreviews.length} image{packageImagePreviews.length !== 1 ? 's' : ''} {editingPackage ? 'loaded' : 'selected'}
-                          </p>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {packageImagePreviews.map((previewUrl, index) => (
-                              <div
-                                key={index}
-                                className={`relative group cursor-move ${
-                                  draggedIndex === index ? 'opacity-50' : ''
-                                }`}
-                                draggable={!isSubmitting}
-                                onDragStart={(e) => handlePackageDragStart(e, index)}
-                                onDragOver={handlePackageDragOver}
-                                onDragEnd={handlePackageDragEnd}
-                                onDrop={(e) => handlePackageDrop(e, index)}
-                              >
-                                <img
-                                  src={previewUrl}
-                                  alt={`Preview ${index + 1}`}
-                                  className="w-full aspect-square object-cover rounded-lg border border-gray-200"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (editingPackage) {
-                                      // Remove existing image
-                                      const newExistingImages = existingPackageImages.filter((_, i) => i !== index);
-                                      const newPreviews = packageImagePreviews.filter((_, i) => i !== index);
-                                      setExistingPackageImages(newExistingImages);
-                                      setPackageImagePreviews(newPreviews);
-                                    } else {
-                                      // Remove new image
-                                      const newFiles = packageForm.images.filter((_, i) => i !== index);
-                                      const newPreviews = packageImagePreviews.filter((_, i) => i !== index);
-
-                                      handlePackageFormChange('images', newFiles);
-                                      // Clean up the removed preview URL
-                                      if (previewUrl.startsWith('blob:')) {
-                                        URL.revokeObjectURL(previewUrl);
-                                      }
-                                      setPackageImagePreviews(newPreviews);
-                                    }
-                                  }}
-                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                  disabled={isSubmitting}
-                                >
-                                  ×
-                                </button>
-                                {/* Drag handle indicator */}
-                                <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                  Drag to reorder
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                      <Label>Hour Range *</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="packageHoursMin" className="text-xs text-muted-foreground">Min Hours</Label>
+                          <Input
+                            id="packageHoursMin"
+                            type="number"
+                            min={0}
+                            step={1}
+                            placeholder="50"
+                            value={packageForm.hoursMin || ""}
+                            onChange={(e) => {
+                              const min = Number(e.target.value);
+                              handlePackageFormChange('hoursMin', min);
+                              const max = packageForm.hoursMax;
+                              if (max > 0) {
+                                handlePackageFormChange('name', `${min}-${max} Hour Package`);
+                              }
+                            }}
+                            required
+                            disabled={isSubmitting}
+                          />
                         </div>
+                        <div>
+                          <Label htmlFor="packageHoursMax" className="text-xs text-muted-foreground">Max Hours</Label>
+                          <Input
+                            id="packageHoursMax"
+                            type="number"
+                            min={0}
+                            step={1}
+                            placeholder="99"
+                            value={packageForm.hoursMax || ""}
+                            onChange={(e) => {
+                              const max = Number(e.target.value);
+                              handlePackageFormChange('hoursMax', max);
+                              const min = packageForm.hoursMin;
+                              if (min > 0) {
+                                handlePackageFormChange('name', `${min}-${max} Hour Package`);
+                              }
+                            }}
+                            required
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </div>
+                      {packageForm.hoursMin > 0 && packageForm.hoursMax > 0 && (
+                        <p className="text-xs text-gray-500">
+                          Range: {packageForm.hoursMin}–{packageForm.hoursMax} hours
+                        </p>
                       )}
                     </div>
 
-                    {/* Package Name */}
+                    {/* Price Per Hour */}
                     <div className="space-y-2">
-                      <Label htmlFor="packageName">Package Name *</Label>
+                      <Label htmlFor="packagePricePerHour">Price Per Hour ($) *</Label>
                       <Input
-                        id="packageName"
-                        placeholder="Starter Package"
-                        value={packageForm.name}
-                        onChange={(e) => handlePackageFormChange('name', e.target.value)}
+                        id="packagePricePerHour"
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        placeholder="65.00"
+                        value={packageForm.pricePerHour || ""}
+                        onChange={(e) => {
+                          const pph = Number(e.target.value);
+                          handlePackageFormChange('pricePerHour', pph);
+                          if (packageForm.hoursMin > 0) {
+                            handlePackageFormChange('totalPrice', Math.round(packageForm.hoursMin * pph * 100) / 100);
+                          }
+                        }}
                         required
                         disabled={isSubmitting}
                       />
                     </div>
 
-                    {/* Package Category */}
+                    {/* Total Price */}
                     <div className="space-y-2">
-                      <Label htmlFor="packageCategory">Category</Label>
+                      <Label htmlFor="packageTotalPrice">Total Price ($)</Label>
                       <Input
-                        id="packageCategory"
-                        placeholder="Starter, Professional, Elite, etc."
-                        value={packageForm.category}
-                        onChange={(e) => handlePackageFormChange('category', e.target.value)}
+                        id="packageTotalPrice"
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        placeholder="1625.00"
+                        value={packageForm.totalPrice || ""}
+                        onChange={(e) => handlePackageFormChange('totalPrice', Number(e.target.value))}
                         disabled={isSubmitting}
                       />
-                    </div>
-
-                    {/* Package Duration */}
-                    <div className="space-y-2">
-                      <Label htmlFor="packageDuration">Duration</Label>
-                      <Input
-                        id="packageDuration"
-                        placeholder="25 Hours, 50 Hours, etc."
-                        value={packageForm.duration}
-                        onChange={(e) => handlePackageFormChange('duration', e.target.value)}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-
-                    {/* Package Price */}
-                    <div className="space-y-2">
-                      <Label htmlFor="packagePrice">Price</Label>
-                      <Input
-                        id="packagePrice"
-                        placeholder="Starting at $1,625"
-                        value={packageForm.price}
-                        onChange={(e) => handlePackageFormChange('price', e.target.value)}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-
-                    {/* Package Description */}
-                    <div className="space-y-2">
-                      <Label htmlFor="packageDescription">Description *</Label>
-                      <Textarea
-                        id="packageDescription"
-                        placeholder="Describe the package, including what it includes..."
-                        value={packageForm.description}
-                        onChange={(e) => handlePackageFormChange('description', e.target.value)}
-                        rows={4}
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </div>
-
-                    {/* Package Features */}
-                    <div className="space-y-2">
-                      <Label htmlFor="packageFeatures">Features</Label>
-                      <Textarea
-                        id="packageFeatures"
-                        placeholder="List features separated by commas (Flight Hours, Ground School, etc.)"
-                        value={packageForm.features?.join(', ') || ''}
-                        onChange={(e) => handlePackageFormChange('features', e.target.value.split(',').map(item => item.trim()).filter(item => item))}
-                        rows={3}
-                        disabled={isSubmitting}
-                      />
+                      {packageForm.hoursMin > 0 && packageForm.pricePerHour > 0 && (
+                        <p className="text-xs text-gray-500">
+                          Auto-calculated from min hours: {packageForm.hoursMin} hrs × ${packageForm.pricePerHour.toFixed(2)} = ${(packageForm.hoursMin * packageForm.pricePerHour).toFixed(2)}
+                        </p>
+                      )}
                     </div>
 
                     <DialogFooter>
@@ -2265,14 +2020,9 @@ export default function DashboardPage() {
                   <div key={pkg.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {pkg.name}
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                          {pkg.hoursMin && pkg.hoursMax ? `${pkg.hoursMin}-${pkg.hoursMax} Hour Package` : pkg.name}
                         </h3>
-                        {pkg.category && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 mb-2">
-                            {pkg.category}
-                          </span>
-                        )}
                       </div>
                       <div className="flex space-x-2">
                         <Button
@@ -2293,50 +2043,25 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {pkg.images && pkg.images.length > 0 && (
-                      <div className="mb-4">
-                        <img
-                          src={pkg.images[0].medium}
-                          alt={pkg.name}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+                        <span className="text-gray-500">Hours</span>
+                        <span className="font-semibold text-gray-900">
+                          {pkg.hoursMin && pkg.hoursMax ? `${pkg.hoursMin}–${pkg.hoursMax}` : pkg.hours || '—'}
+                        </span>
                       </div>
-                    )}
-
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        {pkg.duration && (
-                          <span className="text-sm text-gray-600">{pkg.duration}</span>
-                        )}
-                        {pkg.price && (
-                          <span className="text-sm font-semibold text-gray-900">{pkg.price}</span>
-                        )}
+                      <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+                        <span className="text-gray-500">Price / Hour</span>
+                        <span className="font-semibold text-gray-900">
+                          {pkg.pricePerHour ? `$${pkg.pricePerHour.toFixed(2)}` : '—'}
+                        </span>
                       </div>
-
-                      <p className="text-sm text-gray-600 line-clamp-3">
-                        {pkg.description}
-                      </p>
-
-                      {pkg.features && pkg.features.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 mb-1">Features:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {pkg.features.slice(0, 3).map((feature, index) => (
-                              <span
-                                key={index}
-                                className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800"
-                              >
-                                {feature}
-                              </span>
-                            ))}
-                            {pkg.features.length > 3 && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                                +{pkg.features.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                      <div className="flex justify-between items-center py-1.5">
+                        <span className="text-gray-500">Total Price</span>
+                        <span className="font-bold text-gray-900 text-base">
+                          {pkg.totalPrice ? `$${pkg.totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}

@@ -2,9 +2,16 @@ export interface Package {
   id?: string;
   images?: { original: string; large: string; medium: string; small: string }[];
   name: string;
-  description: string;
-  features: string[];
-  price?: string; // e.g., "Starting at $1,625"
-  duration?: string; // e.g., "25 Hours"
-  category?: string; // e.g., "Starter", "Professional", "Elite"
+  hoursMin: number;
+  hoursMax: number;
+  /** @deprecated Use hoursMin instead */
+  hours?: number;
+  pricePerHour: number;
+  totalPrice: number;
+  // Legacy fields kept for backward compatibility with existing Firestore docs
+  description?: string;
+  features?: string[];
+  price?: string;
+  duration?: string;
+  category?: string;
 }

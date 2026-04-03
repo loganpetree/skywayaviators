@@ -22,6 +22,9 @@ export default function BookFlightSection() {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
               Book your first flight
             </h2>
+            <p className="text-sm text-gray-500 mt-1 max-w-md">
+              Schedule a discovery flight or training session at Lancaster Regional Airport near Dallas, TX.
+            </p>
           </div>
           <div className="hidden sm:flex items-center gap-3 ml-auto flex-1 justify-end">
             <div className="flex-1 max-w-[200px] h-px bg-gray-200" />

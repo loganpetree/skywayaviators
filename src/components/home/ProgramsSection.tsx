@@ -31,6 +31,9 @@ export default function ProgramsSection() {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
               Select a path to get started
             </h2>
+            <p className="text-sm text-gray-500 mt-1 max-w-md">
+              Choose between flight school training programs or time-building packages to begin your aviation journey.
+            </p>
           </div>
           <div className="hidden sm:flex items-center gap-3 ml-auto flex-1 justify-end">
             <div className="flex-1 max-w-[200px] h-px bg-gray-200" />

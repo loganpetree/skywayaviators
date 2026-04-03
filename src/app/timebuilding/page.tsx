@@ -1,58 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Package } from '@/types/package';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, ArrowRight, Plane } from 'lucide-react';
-
-function programNameToSlug(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
-}
+import { Clock, Plane } from 'lucide-react';
+import FAQSection from '@/components/home/FAQSection';
+import Footer from '@/components/home/Footer';
 
 export default function TimeBuildingPage() {
-  const router = useRouter();
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
-
-  useEffect(() => {
-    const fetchPackages = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, 'packages'));
-        const data: Package[] = [];
-        snapshot.forEach((doc) => {
-          const d = doc.data();
-          data.push({
-            id: doc.id,
-            name: d.name || '',
-            description: d.description || '',
-            features: d.features || [],
-            images: d.images || [],
-            price: d.price || '',
-            duration: d.duration || '',
-            category: d.category || '',
-          } as Package);
-        });
-        setPackages(data);
-      } catch (err) {
-        console.error('Error fetching packages:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPackages();
   }, []);
 
   const openBooking = () => {
@@ -62,26 +18,27 @@ export default function TimeBuildingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="relative bg-gray-950 py-20 sm:py-28 overflow-hidden">
+      <section className="relative bg-white py-20 sm:py-28 overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-30"
+          className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url(/ifr.png)' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/80 to-gray-950/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/70" />
+
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold tracking-widest uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 text-xs font-semibold tracking-widest uppercase mb-6">
               <Clock className="w-4 h-4" />
               Time Building
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.1] mb-5">
-              Build hours,
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tight leading-[1.1] mb-5">
+              Fly for as low as
               <br />
-              <span className="text-amber-400">build your future</span>
+              <span className="text-amber-500">$43/hr wet</span>
             </h1>
-            <p className="text-lg text-gray-300 leading-relaxed mb-8 max-w-lg">
-              Already have your certificate? Build flight hours toward your ATP minimums with our well-maintained fleet at competitive rates.
+            <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-lg">
+              Already have your certificate? Build flight hours toward your ATP minimums with our well-maintained fleet — starting at just $43.00/hr wet.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button
@@ -96,105 +53,124 @@ export default function TimeBuildingPage() {
         </div>
       </section>
 
-      {/* Packages Grid */}
-      <section className="py-16 sm:py-20">
+      {/* Featured 50-Hour Deal */}
+      <section className="py-12 sm:py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12">
-            <p className="text-sm font-semibold tracking-widest uppercase text-amber-500 mb-2">
-              Our Packages
-            </p>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Time building packages
-            </h2>
-          </div>
+          <div className="relative rounded-3xl bg-gray-950 overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[100px] -translate-y-1/3 translate-x-1/4" />
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="rounded-2xl bg-gray-100 animate-pulse h-80" />
-              ))}
-            </div>
-          ) : packages.length === 0 ? (
-            <p className="text-gray-500 text-lg">No packages available at the moment.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {packages.map((pkg, index) => {
-                const gradients = [
-                  'from-amber-500 to-amber-600',
-                  'from-orange-500 to-orange-600',
-                  'from-yellow-600 to-yellow-700',
-                  'from-red-500 to-red-600',
-                ];
-                const gradient = gradients[index % gradients.length];
-
-                return (
-                  <div
-                    key={pkg.id || index}
-                    onClick={() => router.push(`/program/${programNameToSlug(pkg.name)}`)}
-                    className="group relative rounded-2xl overflow-hidden cursor-pointer border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300"
-                  >
-                    {/* Image / Gradient */}
-                    <div className="relative h-48">
-                      {pkg.images && pkg.images.length > 0 ? (
-                        <Image
-                          src={pkg.images[0].large || pkg.images[0].medium || pkg.images[0].original}
-                          alt={pkg.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-4 left-5">
-                        <h3 className="text-xl font-bold text-white">{pkg.name}</h3>
-                        <div className="flex items-center gap-3 mt-1">
-                          {pkg.duration && (
-                            <span className="text-sm text-white/70">{pkg.duration}</span>
-                          )}
-                          {pkg.price && (
-                            <span className="text-sm font-semibold text-amber-300">{pkg.price}</span>
-                          )}
-                        </div>
-                      </div>
-                      {pkg.category && (
-                        <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-medium text-white border border-white/10">
-                          {pkg.category}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-5">
-                      {pkg.description && (
-                        <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2">
-                          {pkg.description}
-                        </p>
-                      )}
-
-                      {pkg.features && pkg.features.length > 0 && (
-                        <ul className="space-y-1.5 mb-4">
-                          {pkg.features.slice(0, 3).map((feat, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                              <CheckCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                              {feat}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-500 uppercase tracking-wide group-hover:gap-2.5 transition-all duration-200">
-                        View Package
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
+            <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-0">
+              {/* Left: Badge + Price */}
+              <div className="flex-1 p-8 sm:p-10 lg:p-12">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="text-amber-400 text-xs font-bold tracking-widest uppercase">Most Popular</span>
+                </div>
+                <p className="text-amber-400 text-sm font-semibold tracking-widest uppercase mb-2">
+                  50-Hour Block Rate
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-6xl sm:text-7xl font-black text-white tracking-tighter leading-none">$45</span>
+                  <div className="flex flex-col">
+                    <span className="text-xl font-bold text-white/40">.00</span>
+                    <span className="text-sm font-medium text-white/30 -mt-1">/hr wet</span>
                   </div>
-                );
-              })}
+                </div>
+                <p className="text-gray-400 text-base leading-relaxed max-w-sm mt-3">
+                  Fuel included. No hidden fees. 50 hours of affordable stick time.
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="hidden lg:block w-px h-40 bg-white/10" />
+
+              {/* Center: Stats + Features */}
+              <div className="flex-1 px-8 sm:px-10 lg:px-12 pb-8 lg:pb-0">
+                <div className="flex gap-6 mb-6">
+                  <div>
+                    <p className="text-2xl font-black text-white">50</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black text-amber-400">$2,250</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total</p>
+                  </div>
+                </div>
+                <ul className="space-y-2">
+                  {['Fuel included in hourly rate', 'Fly on your schedule', 'Well-maintained fleet'].map((item) => (
+                    <li key={item} className="flex items-center gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                      <span className="text-sm text-gray-300">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Right: CTA */}
+              <div className="flex-shrink-0 p-8 sm:p-10 lg:p-12 w-full lg:w-auto">
+                <Button
+                  onClick={openBooking}
+                  className="w-full lg:w-auto bg-amber-500 hover:bg-amber-400 text-white font-bold py-4 px-8 text-base rounded-2xl shadow-lg shadow-amber-500/20 transition-all duration-200 cursor-pointer"
+                >
+                  <Plane className="w-5 h-5 mr-2 -rotate-45" />
+                  Claim This Rate
+                </Button>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </section>
+
+      {/* Block Rate Cards */}
+      <section className="py-16 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <p className="text-sm font-semibold tracking-widest uppercase text-amber-500 mb-3">
+              Block Rates
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              More hours, better rates
+            </h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Lock in a block of hours and save. The more you fly, the less you pay per hour.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { hours: 50, rate: 45, total: 2250 },
+              { hours: 100, rate: 43, total: 4300 },
+              { hours: 300, rate: 40, total: 12000 },
+            ].map((block) => (
+              <div
+                key={block.hours}
+                onClick={openBooking}
+                className="group relative rounded-2xl bg-gray-100 overflow-hidden cursor-pointer transition-all duration-300 aspect-[4/3] flex items-center justify-center hover:shadow-xl"
+              >
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 900 400" preserveAspectRatio="none" aria-hidden="true">
+                  <text x="50%" y="58%" dominantBaseline="middle" textAnchor="middle" className="fill-white transition-colors duration-300 group-hover:fill-gray-50" style={{ fontSize: '500px', fontWeight: 900, fontStyle: 'italic' }}>
+                    {block.hours}
+                  </text>
+                </svg>
+
+                <div className="relative z-10 text-center px-6">
+                  <p className="text-xs font-bold tracking-widest uppercase text-amber-500 mb-2">
+                    {block.hours}-hour block
+                  </p>
+                  <p className="text-3xl font-black text-gray-900 mb-1">
+                    ${block.rate}<span className="text-lg font-bold text-gray-400">/hr</span>
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    ${block.total.toLocaleString('en-US', { minimumFractionDigits: 2 })} total
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
 
       {/* CTA */}
       <section className="py-16 bg-gray-50">
@@ -214,6 +190,12 @@ export default function TimeBuildingPage() {
           </Button>
         </div>
       </section>
+
+      {/* FAQ */}
+      <FAQSection />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

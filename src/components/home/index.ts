@@ -1,5 +1,7 @@
 export { default as BookingDialog } from './BookingDialog';
 export { default as HeroSection } from './HeroSection';
+export { default as HeroWithData } from './HeroWithData';
+export { default as HomeClientEffects } from './HomeClientEffects';
 export { default as ProgramsSection } from './ProgramsSection';
 export { default as FinancingSection } from './FinancingSection';
 export { default as ProgramsCarousel } from './ProgramsCarousel';
@@ -8,5 +10,6 @@ export { default as FleetSection } from './FleetSection';
 export { default as FleetShowcase } from './FleetShowcase';
 export { default as TimeBuildingSection } from './TimeBuildingSection';
 export { default as TestimonialsSection } from './TestimonialsSection';
+export { default as FAQSection } from './FAQSection';
 export { default as LocationSection } from './LocationSection';
 export { default as Footer } from './Footer';

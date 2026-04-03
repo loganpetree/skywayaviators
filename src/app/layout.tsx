@@ -14,10 +14,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Skyway Aviators - Premier Flight Training",
-  description: "Premier flight training and aircraft rental in Lancaster, Texas.",
+  metadataBase: new URL('https://skywayaviators.com'),
+  title: {
+    default: 'Skyway Aviators — Flight Training in Lancaster, TX',
+    template: '%s | Skyway Aviators',
+  },
+  description:
+    'Premier Part 61 flight school near Dallas, Texas offering private pilot through commercial certifications, time-building packages, and aircraft rental at Lancaster Regional Airport (KLNC).',
   icons: {
-    icon: "/skyway-logo.webp",
+    icon: '/skyway-logo.webp',
+    apple: '/skyway-logo.webp',
+  },
+  openGraph: {
+    siteName: 'Skyway Aviators',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
   },
 };
 

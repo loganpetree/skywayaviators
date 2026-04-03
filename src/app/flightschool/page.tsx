@@ -9,6 +9,8 @@ import { Program } from '@/types/program';
 import { Aircraft } from '@/types/aircraft';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, CheckCircle, ArrowRight, Plane, ShieldCheck, Clock, Sparkles } from 'lucide-react';
+import FAQSection from '@/components/home/FAQSection';
+import Footer from '@/components/home/Footer';
 
 function programNameToSlug(name: string) {
   return name
@@ -325,29 +327,29 @@ export default function FlightSchoolPage() {
           </div>
 
           <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#101424] via-[#0D2572] to-[#101424]" />
             <div className="absolute inset-0 opacity-30" style={{
-              backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 40%)',
+              backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(71, 198, 214, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(78, 98, 178, 0.3) 0%, transparent 40%)',
             }} />
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#47C6D6]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
 
             <div className="relative z-10 grid md:grid-cols-5 gap-8 p-8 md:p-12 lg:p-16">
               <div className="md:col-span-3 flex flex-col justify-center">
                 <span className="inline-flex items-center gap-2.5 mb-5">
-                  <span className="text-[11px] font-medium tracking-widest uppercase text-indigo-300/70">Powered by</span>
+                  <span className="text-[11px] font-medium tracking-widest uppercase text-[#47C6D6]/70">Powered by</span>
                   <Image
-                    src="/wurthy-logo.svg"
-                    alt="Wurthy"
-                    width={80}
-                    height={18}
-                    className="h-[18px] w-auto opacity-70"
+                    src="/stratus-logo.png"
+                    alt="Stratus Financial"
+                    width={120}
+                    height={20}
+                    className="h-[20px] w-auto opacity-80"
                   />
                 </span>
 
                 <h3 className="text-3xl md:text-4xl lg:text-[2.75rem] font-black text-white tracking-tight leading-tight mb-5">
                   Focus on Flying,
                   <br />
-                  <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-[#47C6D6] to-[#5588ED] bg-clip-text text-transparent">
                     Not Finances
                   </span>
                 </h3>
@@ -358,10 +360,12 @@ export default function FlightSchoolPage() {
                 </p>
 
                 <div className="flex flex-wrap gap-3">
-                  <Button className="bg-indigo-500 hover:bg-indigo-400 text-white font-semibold px-7 py-3 text-sm rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-400/30 transition-all duration-200 cursor-pointer">
-                    Apply for Financing
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  <a href="https://apply.stratus.finance/" target="_blank" rel="noopener noreferrer">
+                    <Button className="bg-[#47C6D6] hover:bg-[#5DD6E4] text-[#101424] font-semibold px-7 py-3 text-sm rounded-xl shadow-lg shadow-[#47C6D6]/25 hover:shadow-[#47C6D6]/30 transition-all duration-200 cursor-pointer">
+                      Apply for Financing
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </a>
                 </div>
               </div>
 
@@ -369,24 +373,24 @@ export default function FlightSchoolPage() {
                 {[
                   {
                     icon: ShieldCheck,
-                    title: 'No Credit Check',
-                    desc: 'Get approved based on your earning potential, not your credit score.',
-                    color: 'text-emerald-400',
-                    bg: 'bg-emerald-500/10 border-emerald-500/20',
+                    title: 'Beyond Your FICO Score',
+                    desc: 'Stratus looks at more than just credit — your earning potential matters.',
+                    color: 'text-[#47C6D6]',
+                    bg: 'bg-[#47C6D6]/10 border-[#47C6D6]/20',
                   },
                   {
                     icon: Clock,
-                    title: 'Quick Approval',
-                    desc: 'Apply in minutes and get a decision the same day.',
-                    color: 'text-sky-400',
-                    bg: 'bg-sky-500/10 border-sky-500/20',
+                    title: 'Deferred Payments',
+                    desc: '12-month deferment while you complete training and find employment.',
+                    color: 'text-[#5588ED]',
+                    bg: 'bg-[#5588ED]/10 border-[#5588ED]/20',
                   },
                   {
                     icon: Sparkles,
-                    title: 'Flexible Terms',
-                    desc: 'Monthly payments designed to fit a student pilot budget.',
-                    color: 'text-purple-400',
-                    bg: 'bg-purple-500/10 border-purple-500/20',
+                    title: 'Full Program Financing',
+                    desc: 'Cover your entire flight training from private through commercial.',
+                    color: 'text-[#FFBC7D]',
+                    bg: 'bg-[#FFBC7D]/10 border-[#FFBC7D]/20',
                   },
                 ].map((feat) => (
                   <div
@@ -430,6 +434,12 @@ export default function FlightSchoolPage() {
           </Button>
         </div>
       </section>
+
+      {/* FAQ */}
+      <FAQSection />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

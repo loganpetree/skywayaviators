@@ -37,10 +37,17 @@ export default function HeroSection({ fleetSize }: HeroSectionProps) {
           </h1>
 
           <p
+            className="animate-hero-fade-up text-lg sm:text-xl md:text-2xl font-medium text-white/80 mb-3"
+            style={{ animationDelay: '0.35s' }}
+          >
+            Flight Training &amp; Aircraft Rental in Lancaster, TX
+          </p>
+
+          <p
             className="animate-hero-fade-up text-base sm:text-lg text-gray-300 max-w-2xl leading-relaxed"
             style={{ animationDelay: '0.45s' }}
           >
-            Lancaster&apos;s premier flight training. Join hundreds of successful pilots who started their aviation careers with us.
+            Join hundreds of successful pilots who started their aviation careers with us near Dallas-Fort Worth.
           </p>
 
           {/* Stats */}
