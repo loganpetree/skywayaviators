@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   description:
     'Premier Part 61 flight school near Dallas, Texas offering private pilot through commercial certifications, time-building packages, and aircraft rental at Lancaster Regional Airport (KLNC).',
   icons: {
-    icon: '/skyway-logo.webp',
-    apple: '/skyway-logo.webp',
+    icon: '/favicon.png',
+    apple: '/favicon.png',
   },
   openGraph: {
     siteName: 'Skyway Aviators',
